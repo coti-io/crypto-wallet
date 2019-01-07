@@ -1,0 +1,32 @@
+{
+  "name": "testnet-wallet",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "client": "cd client && yarn start",
+    "build": "cd client && rm -rf build && yarn build",
+    "server": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "append-query": "^2.0.1",
+    "bn.js": "^4.11.8",
+    "body-parser": "^1.18.3",
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.5",
+    "del": "^3.0.0",
+    "dotenv": "^6.0.0",
+    "express": "^4.16.2",
+    "http-proxy-middleware": "^0.18.0",
+    "memory-cache": "^0.2.0",
+    "redis": "^2.8.0",
+    "redux-form": "^7.4.2",
+    "request": "^2.87.0",
+    "request-promise": "^4.2.2",
+    "uniqid": "^5.0.3",
+    "winston": "^3.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^3.5.0"
+  }
+}

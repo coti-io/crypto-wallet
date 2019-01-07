@@ -1,0 +1,16 @@
+version: '3'
+services:
+  testnet-wallet:
+    image: nexus.coti.io/repository/docker/testnet-wallet:latest-dev
+    build:
+      context: .
+      args:
+        CRYPTO_LIBRARY_BRANCH: "dev-yaniv"
+    ports:
+      - "6000:6000"
+    environment:
+      - REDIS_HOST="redis"
+    links:
+      - "redis"
+  redis:
+    image: redis:4

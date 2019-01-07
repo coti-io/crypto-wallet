@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="14px" height="9px" viewBox="0 0 14 9" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 49.3 (51167) - http://www.bohemiancoding.com/sketch -->
+    <title>overview-active</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard-3" transform="translate(-75.000000, -87.000000)" fill="#FFFFFF">
+            <g id="overview-active" transform="translate(76.000000, 87.000000)">
+                <path d="M1.01953521,4.87049645 C0.55784007,5.17357406 -0.0621307436,5.04498914 -0.365208356,4.583294 C-0.668285969,4.12159886 -0.539701054,3.50162804 -0.0780059109,3.19855043 L3.45122944,0.88180043 C3.89248597,0.592139649 4.48288917,0.695311339 4.79975972,1.1174532 L8.13612558,5.56223256 L10.6437921,3.56855636 C11.0760996,3.22485786 11.7051768,3.29668967 12.0488753,3.72899718 C12.3925738,4.1613047 12.320742,4.79038187 11.8884345,5.13408036 L8.57593446,7.76762528 C8.1351032,8.11810043 7.49193836,8.03558746 7.15385356,7.58518352 L3.76387868,3.06898504 L1.01953521,4.87049645 Z" id="Line-157-Copy" fill-rule="nonzero"></path>
+                <circle id="Oval-10-Copy-2" cx="8" cy="7" r="2"></circle>
+                <circle id="Oval-10-Copy-5" cx="4" cy="2" r="2"></circle>
+            </g>
+        </g>
+    </g>
+</svg>

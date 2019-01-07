@@ -1,0 +1,11 @@
+export const getWallet = ({ account }) => account.wallet;
+export const getSocketClient = ({ app }) => app.socketClient;
+export const getNodeUrl = ({ app }) => app.selectedNode;
+export const getUserHash = ({ account }) => account.userHash;
+export const getUserTrustScore = ({ account }) => account.trustScore;
+export const getfullNodeFee = ({ account }) => account.fullNodeFee;
+export const getNetworkFee = ({ account }) => account.networkFee;
+export const getPaymentRequest = ({ account }) => account.paymentRequest;
+// export const getTransactionsHistoryFromRedux = ({ app }) => app.transactionsHistory;
+// export const getWalletAddressesList = ({ app }) => app.walletAddressesList;
+// export const getUserHash = ({ app }) => app.userHash;

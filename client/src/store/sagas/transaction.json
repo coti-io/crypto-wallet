@@ -1,0 +1,155 @@
+{
+    "baseTransactions": [{
+        "addressHash": "be62b8b7c92a111da8851f276b48f42a3be9cc7f12f8d48bc6a6505ff7b7009b821d0c36f60606697bdde82b9bd150f5bb3d3010646498970d96218e8c5e2d7dd7585690",
+        "amount": "-2.1451097132554535",
+        "hash": "fba2bb74b2829d7465a769e5988dbbd7ed0de0b570c35458f99ce7349d4180db",
+        "createTime": 1544698868825,
+        "signatureData": {
+            "r": "c586b3dead6b227bb2a0f1ac3b1e31043f09f735c6e72016d273b0ad3b4924e6",
+            "s": "d0f36dd9b9c612a1fdb9a59fc1548e25c6a3c1788f68a64d97681a9213850226"
+        },
+        "name": "IBT"
+    }, {
+        "addressHash": "5e6b6af708ae15c1c55641f9e87e71f5cd58fc71aa58ae55abe9d5aa88b2ad3c5295cbffcfbb3a087e8da72596d7c60eebb4c59748cc1906b2aa67be43ec3eb147c1a19a",
+        "amount": "-5.769159544120298",
+        "hash": "bac495b62f2ae09e1515dbb19fb76f9f042319a62a989f161360feeb112bb8a5",
+        "createTime": 1544698868825,
+        "signatureData": {
+            "r": "2def8c51971162abeb7eb19f773dddf644a7dc1c8b1c5c27cabe26a46eadc097",
+            "s": "9b1884d856c329426dc1e2ace5d53f964e121ac88d27a2dd0af469a9ca0a9a38"
+        },
+        "name": "IBT"
+    }, {
+        "addressHash": "be62b8b7c92a111da8851f276b48f42a3be9cc7f12f8d48bc6a6505ff7b7009b821d0c36f60606697bdde82b9bd150f5bb3d3010646498970d96218e8c5e2d7dd7585690",
+        "amount": "-8.224999877836998725",
+        "hash": "916f175c600e52f98c622fcddbc9b38d3be1d7b1ab37e34b3d2dfaa069be1912",
+        "createTime": 1544698868826,
+        "signatureData": {
+            "r": "c586b3dead6b227bb2a0f1ac3b1e31043f09f735c6e72016d273b0ad3b4924e6",
+            "s": "d0f36dd9b9c612a1fdb9a59fc1548e25c6a3c1788f68a64d97681a9213850226"
+        },
+        "name": "IBT"
+    }, {
+        "addressHash": "61072835d67e855f60eddc1e5b5826adf9afe3521d650719ce12e37aa5e7a45fd3ed65796e6a454f8f1173ed911eba29f134a26ff3bcd7184284512bab0ed198c02f45f8",
+        "amount": "1",
+        "hash": "43f58037c1c04b1d61d6361d5041681b5436b2297bb94770545dfc3392e07cbb",
+        "createTime": 1544698868762,
+        "signatureData": {
+            "r": "4efed40a5270884235b92354b825ac7f6a78d7351d3d5524f00807d3e6f9df59",
+            "s": "2a1d47cc5970bc3f2b836c73ed79d3d5b0c960467809c8b92a440f39930c2936"
+        },
+        "originalAmount": "14.9992763714977725",
+        "name": "FFBT"
+    }, {
+        "addressHash": "20f9af7792c4f4251800f7853dae4981b318b9db6e1efc73d94ce4321e7942ec9fb21659260645120a63fe89b40e089eae215ded888a4bb187be59f61bebdc9a3e5dac5e",
+        "amount": "0.139992763714977725",
+        "hash": "59c360558b39c7bfd1339d23ef56c4b4e7671d738df92836f0fa3323d4ac0a8e",
+        "createTime": 1544698868775,
+        "originalAmount": "14.9992763714977725",
+        "networkFeeTrustScoreNodeResult": [{
+            "trustScoreNodeHash": "bb8402f6b0f01d31ffb44799ae33d868572bbd349e17e2c9187e08abe64d1e65cd4b35a26f9f229629f2e6082abeadbb690d1147db1d52857dacb88dc313f389",
+            "trustScoreNodeSignature": {
+                "r": "bd3b920bff1a014747188d3f73a49cb7494e89650f33e23000b2ba32b41adf5f",
+                "s": "f86a17e0934b5173de451209ddf76854a37d1f0a9369daad65224ba399f8305e"
+            },
+            "valid": true
+        }, {
+            "trustScoreNodeHash": "bb8402f6b0f01d31ffb44799ae33d868572bbd349e17e2c9187e08abe64d1e65cd4b35a26f9f229629f2e6082abeadbb690d1147db1d52857dacb88dc313f389",
+            "trustScoreNodeSignature": {
+                "r": "e9b2df981b828a3e915ebb3c09213d81b91acd2c3dc6cb0ce065562df0142bda",
+                "s": "8568da20f9d879dbb5c0bd5a9753260053b29edbbbb907ac74d523f321f9e478"
+            },
+            "valid": true
+        }, {
+            "trustScoreNodeHash": "bb8402f6b0f01d31ffb44799ae33d868572bbd349e17e2c9187e08abe64d1e65cd4b35a26f9f229629f2e6082abeadbb690d1147db1d52857dacb88dc313f389",
+            "trustScoreNodeSignature": {
+                "r": "6c17464e736ce16e34c8a6d4f9990823b27141348635fc07880aa993facde08",
+                "s": "186b0c19aecb8b4cb1b319d776d7a4da51ad61eb37afc1229e3a4c202986fc3a"
+            },
+            "valid": true
+        }],
+        "reducedAmount": "13.9992763714977725",
+        "name": "NFBT"
+    }, {
+        "addressHash": "ed9a5522302fd05126d751a47065104494f4bb2f7f013d4f54661dc698ddfcf005b41bcc104b6a02b53024db91f9f5774ab997d8c71c50c44aae189a1916604bcfd5c92c",
+        "amount": "14.9992763714977725",
+        "hash": "5d484dfd3230f319848b5ef45ce8b7d54964414e5dbc9be93c80d35ef89eec35",
+        "createTime": 1544698868826,
+        "originalAmount": "14.9992763714977725",
+        "name": "RBT"
+    }],
+    "createTime": 1544698868756,
+    "transactionDescription": "test",
+    "trustScoreResults": [{
+        "userHash": "2d543b3026626fb4de4b6250ad10ffa7a8c1845927e005608700c3d52834502d8c80ebaae318184cd525352ed07694d6ed8ed2a8a2cf1171200e2108cbe53702",
+        "transactionHash": "e5a3dea53df6d6f1a45a17c8fa08ac2c6c82609cb836e78066c71e510b762000",
+        "trustScore": 64.5751,
+        "trustScoreNodeHash": "bb8402f6b0f01d31ffb44799ae33d868572bbd349e17e2c9187e08abe64d1e65cd4b35a26f9f229629f2e6082abeadbb690d1147db1d52857dacb88dc313f389",
+        "trustScoreNodeSignature": {
+            "r": "f2f1f568a3e12eaf6b3c01858f23a837098effe7aad2fb9690604d556cc0615a",
+            "s": "8b51f76ca512796b3a14ffeda0ed4446e895dc8a2b06daf1d8144bac6db9fdf4"
+        }
+    }],
+    "senderHash": "2d543b3026626fb4de4b6250ad10ffa7a8c1845927e005608700c3d52834502d8c80ebaae318184cd525352ed07694d6ed8ed2a8a2cf1171200e2108cbe53702",
+    "hash": "e5a3dea53df6d6f1a45a17c8fa08ac2c6c82609cb836e78066c71e510b762000",
+    "signatureData": {
+        "r": "6523ebd6c9a2c0eb0baa85a24c31a629f722603e03af31c49286c3764776a714",
+        "s": "b887c44327842e492af9fb2c8868ce84555a17fd675744643a65bea4cbddffe6"
+    },
+    "type": "Transfer"
+}
+
+{
+    "baseTransactions": [{
+        "addressHash": "3f0b8322c6043e8ef5dabcc2e849aaa4ab3a781ea3e28f05da0c6b40e04535a4de917e6abdb9d3fe56210f75ca5bac59d32bf0981eab9c6426cce3fb124c61d8cee2ffae",
+        "amount": "-122",
+        "hash": "274229c006071e5317d4c96a2313e32288d88b74cd5fde30b026dda142d794f1",
+        "createTime": 1545655538895,
+        "signatureData": {
+            "r": "514102777992220347828389337597168401735784100474571270752740816878356927899",
+            "s": "101422445388649904000919824376967259583148955258384566361833542347477072543102"
+        },
+        "name": "IBT"
+    }, {
+        "addressHash": "6b0a9bf0933f02886212a0228e21a601485c6afae20af735008997c84366d8d1b6938da64ec4a4a8fa411785afe113a920301039922c388f2bae80e1e58107606561b816",
+        "amount": "122",
+        "hash": "f4c60d26ed56c21effce5df73bdb3ef0407d4ac4cbbddddd8fa07a9738cba422",
+        "createTime": 1545655538895,
+        "name": "IBT"
+    }, {
+        "addressHash": "61072835d67e855f60eddc1e5b5826adf9afe3521d650719ce12e37aa5e7a45fd3ed65796e6a454f8f1173ed911eba29f134a26ff3bcd7184284512bab0ed198c02f45f8",
+        "amount": "1.22",
+        "hash": "1b833d8028c863e66025f5ec8b3c2169d1351ce0d4f0ba114298cdf950a03b4d",
+        "createTime": 1545655533416,
+        "signatureData": {
+            "r": "63816a2fe074c7d207a33e325757434b5865193f0164fd7cec97786d0840d24a",
+            "s": "3035d36764a09effec1e556e9a0c9854d65d4d53dc7707a92febd7d428e0dce6"
+        },
+        "originalAmount": "122",
+        "name": "FFBT"
+    }, {
+        "addressHash": "20f9af7792c4f4251800f7853dae4981b318b9db6e1efc73d94ce4321e7942ec9fb21659260645120a63fe89b40e089eae215ded888a4bb187be59f61bebdc9a3e5dac5e",
+        "amount": "1.2078",
+        "hash": "03ac8f97d23e05da00ec60af98216bbc205cb9b6fdf15c62a88dacb39ce915e5",
+        "createTime": 1545655533544,
+        "originalAmount": "122",
+        "reducedAmount": "120.78",
+        "name": "NFBT"
+    }],
+    "createTime": 1545655538895,
+    "transactionDescription": "21312",
+    "trustScoreResults": [{
+        "userHash": "cee9ba88b4087dc707c28ca9a81eabf009e2efa1e445009209ef3d9613a528569a6fcf78a5c696f449c55bf202a9de86cc55be6efb37b106538a910b2b8c125f",
+        "transactionHash": "ac6c1a78d9c924a18808ea6bdbf073c6f9fce45049cd7f42564afe6bedfb4667",
+        "trustScore": 18.024641404795435,
+        "trustScoreNodeHash": "bb8402f6b0f01d31ffb44799ae33d868572bbd349e17e2c9187e08abe64d1e65cd4b35a26f9f229629f2e6082abeadbb690d1147db1d52857dacb88dc313f389",
+        "trustScoreNodeSignature": {
+            "r": "6cdfb5b9a1b229bef92386d0a04f0130c088af272965e69f20437f1838ae76f3",
+            "s": "2e9e7f9b828fad398acb9ff581d0e49b666bb03e54eecc6b7e717766433e6e0f"
+        }
+    }],
+    "senderHash": "cee9ba88b4087dc707c28ca9a81eabf009e2efa1e445009209ef3d9613a528569a6fcf78a5c696f449c55bf202a9de86cc55be6efb37b106538a910b2b8c125f",
+    "type": "Transfer",
+    "hash": "ac6c1a78d9c924a18808ea6bdbf073c6f9fce45049cd7f42564afe6bedfb4667",
+    "senderTrustScore": "18.02"
+}

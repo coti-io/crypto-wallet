@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="15px" height="13px" viewBox="0 0 15 13" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 49.3 (51167) - http://www.bohemiancoding.com/sketch -->
+    <title>merchants</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard-3" transform="translate(-144.000000, -33.000000)" fill="#7C90AA">
+            <g id="merchants" transform="translate(145.000000, 33.000000)">
+                <path d="M6.94621446,3.88479454 C6.39392971,3.88479454 5.94621446,3.43707929 5.94621446,2.88479454 C5.94621446,2.33250979 6.39392971,1.88479454 6.94621446,1.88479454 L13,1.88479454 C13.6465058,1.88479454 14.1230946,2.48903164 13.9724873,3.11775034 L12.7471585,8.2329558 C12.6394053,8.68277758 12.2372188,9 11.7746711,9 L2.96781016,9 C2.46844652,9 2.04562376,8.63161403 1.977233,8.13695581 L1.00942284,1.13695581 C0.933784238,0.589875148 1.31596354,0.0850614444 1.86304419,0.00942284137 C2.41012485,-0.0662157617 2.91493856,0.315963536 2.99057716,0.863044194 L3.83906404,7 L10.9859265,7 L11.7321626,3.88479454 L6.94621446,3.88479454 Z" id="Rectangle-9" fill-rule="nonzero"></path>
+                <path d="M2,0 C2.55228475,0 3,0.44771525 3,1 C3,1.55228475 2.55228475,2 2,2 L0,2 C-0.55228475,2 -1,1.55228475 -1,1 C-1,0.44771525 -0.55228475,0 0,0 L2,0 Z" id="Line-18" fill-rule="nonzero"></path>
+                <circle id="Oval-10" cx="3.5" cy="11.5" r="1.5"></circle>
+                <circle id="Oval-10-Copy-2" cx="10.5" cy="11.5" r="1.5"></circle>
+            </g>
+        </g>
+    </g>
+</svg>

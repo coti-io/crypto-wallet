@@ -1,0 +1,16 @@
+/* .CircularProgressbar-path       { stroke: linear-gradient(19deg, #0cd6e5, #0cb7e5 35%, #0580c7) !important; }
+.CircularProgressbar-background { fill: green !important; } */
+
+.CircularProgressbar-text{ 
+    fill: #50e3c2 !important; 
+    font-size: 26px !important; 
+    font-family: ClanOT-Medium !important;
+}
+
+.CircularProgressbar-trail{ stroke: #3f69701a !important }
+
+.CircularProgressbar .CircularProgressbar-path { stroke: url(#progreesGradient) ; transition: stroke-dashoffset 1.5s ease 0.3s; }
+
+
+
+

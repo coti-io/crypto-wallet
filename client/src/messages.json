@@ -1,0 +1,6 @@
+{
+    "1" : "Please generate seed before you connect to your wallet",
+    "2" : "The provided seed is invalid. Please enter your initial seed in order to access your wallet.",
+    "3" : "Error at initiating the trust score. Please try again later",
+    "4" : "Wallet is ready to use, please enter your seed and select node to connect."
+}
