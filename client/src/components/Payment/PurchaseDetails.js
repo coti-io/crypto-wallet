@@ -203,9 +203,9 @@ class PurchaseDetails extends Component {
 
     calcFee(selectedNode){
         let total= this.getTotal(JSON.parse(this.props.paymentRequest.baseTransactions)); // total purchase
-        let fee = Number(selectedNode.fee.replace('%','')); // remove % from String
+        let fee = Number(selectedNode.feeData.minimumFee.replace('%','')); // remove % from String
         fee = (total * fee)/100 // convert presentage to fee in COTI 
-        fee = fee > Number(selectedNode.maxFee) ? Number(selectedNode.maxFee) : fee;
+        fee = fee > Number(selectedNode.feeData.maximumFee) ? Number(selectedNode.feeData.maximumFee) : fee;
         total = this.getTotal(JSON.parse(this.props.paymentRequest.baseTransactions), fee);
         this.setState({
             ...this.state, 

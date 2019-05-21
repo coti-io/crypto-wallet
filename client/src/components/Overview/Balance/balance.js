@@ -248,6 +248,8 @@ class Balance extends Component {
 
     render() {
       const merchant = false;
+      const { net, _development } = this.props;
+
         return (
             <BalanceContainer>
                 <Col justifyContent={merchant && "space-between"}>
@@ -279,10 +281,10 @@ class Balance extends Component {
                             <CotiAmount color="#fa3e3e">630 coti</CotiAmount>
                         </Rolling>
                     :
-                        <Button bgColor="#50e3c2" onClick={() => this.onClickSend()}>
+                        net == 'testnet' || _development ? <Button bgColor="#50e3c2" onClick={() => this.onClickSend()}>
                             <img src={require('../../../images/icons/buttonicons_paynow_16X16.svg')} alt="exchange"/>
                             SEND
-                        </Button>
+                        </Button> : null
                     }
                 </Col>
                 {this.state.show && <SendPopup close={() => this.setState({...this.state, show: false})}/>}
@@ -292,9 +294,11 @@ class Balance extends Component {
     }
 }    
 
-const mapStateToProps = ({account}) => {
+const mapStateToProps = ({app, account}) => {
     return {
-        addresses: account.addresses
+        addresses: account.addresses,
+        net: app.net,
+        _development: app._development
     };
 };
 

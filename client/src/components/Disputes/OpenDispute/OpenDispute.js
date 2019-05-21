@@ -541,13 +541,15 @@ class OpenDispute extends Component {
     createArrayToSend(map, type){
         let result = [];
 
-        if(this.state.all && map.values().next().value.length > 0){    
-            result.push({
+        if(this.state.all){
+            if(map.values().next().value.length > 0){
+                result.push({
                     itemIds: this.state.disputeItems.map(item => JSON.stringify(item.id)),
                     [type]: type === "documents" ? map.values().next().value.map(file => file.file):  map.values().next().value,
                     disputeHash: null,
                     userHash: this.props.userHash
                 })
+            }
         }
         else{
             map.forEach((value, key) => {
@@ -602,6 +604,15 @@ class OpenDispute extends Component {
         items.forEach(item => total += Number(item.itemPrice));
         return total
     }
+
+    componentWillReceiveProps(nextProps){
+        if(nextProps.sentDisputes.size > this.props.sentDisputes.size){
+            const txHash = this.props.match.params.transactionHash;
+            const disputeHash = nextProps.sentDisputes.get(txHash)[0].hash;
+            this.props.history.push(`/disputeDetails/${txHash}/${disputeHash}`);
+        }
+    }
+    
     render() {
         const { transactionToDispute } = this.state;
         const PIBT = transactionToDispute.baseTransactions[0];
@@ -709,7 +720,7 @@ class OpenDispute extends Component {
                                 disabled={this.state.disputeItems.length < 1} 
                                 onClick={() => this.submit()}>
                                 <img src={require('../../../images/icons/buttonicons_submit_16X16.svg')}/>
-                                Submit
+                                Submit Dispute
                             </SubmitButton>
                         </ButtonsWrapper>
                     </DisputeContainer>
@@ -728,7 +739,8 @@ class OpenDispute extends Component {
 const mapStateToProps = state => {
     return {
         transactions: state.account.transactions,
-        userHash: state.account.userHash
+        userHash: state.account.userHash,
+        sentDisputes: state.account.sentDisputes
     };
 }
 

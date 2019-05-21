@@ -37,7 +37,7 @@ const Modal = styled.div`
     flex-wrap: wrap;
     @media(max-width: 1060px){
         overflow-y: auto;
-        height: 100vh;
+        height: 100%;
     }
     @media(max-width: 768px){
         border-radius: unset;
@@ -62,7 +62,7 @@ const Close = styled.div`
 const LeftSection = styled.div`
     width: 522px;
     max-width: 100%;
-    padding: 68px 30px;
+    padding: 40px 30px;
     box-sizing: border-box;
     @media(max-width: 768px){
         padding: 40px 30px 0 30px;
@@ -70,7 +70,7 @@ const LeftSection = styled.div`
 `
 
 const RightSection = styled.div`
-    width: 522px;
+    width: 522px !important;
     max-width: 100%;
     padding: 30px;
     box-sizing: border-box;
@@ -120,8 +120,13 @@ const Note = styled.p`
     margin-top: 5px;
 `
 
+const CharsNote = styled.span`
+    font-size: 10px;
+    font-family: ClanOT-Book;
+    color: #999999;
+`
+
 const UploadContainer = styled.div`
-    margin-left: 10px;
     padding-top: 12px;
     & > div{
         display: flex;
@@ -522,7 +527,7 @@ class Popup extends Component {
 	}
 
     drawFiles(){
-        if(this.state.base64.length > 0){
+        if(this.state.base64 && this.state.base64.length > 0){
             return (
                 this.state.base64.map((file, i) => {
                     return (
@@ -616,6 +621,10 @@ class Popup extends Component {
                     <Modal>
                         <Close onClick={() => this.props.close(product.itemId || 'all', this.state.mode)}>+</Close>
                         <LeftSection>
+                            <Head>
+                                <img src={require('../../../images/icons/titleicons_grad_disputedetails_24X24.svg')}/>
+                                Dispute Details
+                            </Head>
                             <ProductName all={!product}>{product.itemName || 'All products'}</ProductName>
                             {!product.itemId && <Total>Total amount: {this.props.total}</Total>}
                             {product.itemId && <Details>
@@ -651,16 +660,13 @@ class Popup extends Component {
                             {this.state.reasonErr && <Errmsg>Please select a reason</Errmsg>}
                         </LeftSection>   
                         <RightSection>
-                            <Head>
-                                <img src={require('../../../images/icons/titleicons_grad_disputedetails_24X24.svg')}/>
-                                Dispute Details
-                            </Head>
+                            
                             <UploadContainer>
                                 <div>
                                     <img src={require('../../../images/icons/titleicons_grad_uploadevidence_24X24.svg')}/>
                                     <span>Upload your evidence</span>
                                 </div>
-                                <Note>You can only upload 3 files in total. Each file cannot exceed 5MB. Supports JPG, JPEG, PNG</Note>
+                                <Note>You can only upload 3 files in total. Each file cannot exceed 5MB. Supports JPG, JPEG, PNG, PDF</Note>
                             </UploadContainer>
                             <UploadDocument>
                                 <EvidenceWrapper>
@@ -669,18 +675,17 @@ class Popup extends Component {
                                 <UploadTextHolder>
                                     <ChooseFileContainer htmlFor="inputfile">
                                         <ChooseFileText >Upload files</ChooseFileText>
-                                        <input type="file" multiple id="inputfile" accept="image/*;capture=camera" onChange={(e) => this.uploadFile(e)}/>
+                                        <input type="file" multiple id="inputfile" accept="image/*;capture=camera" onChange={(e) => this.uploadFile(e)} onClick={(event)=> { event.target.value = null}}/>
                                     </ChooseFileContainer> 
-                                    <span>3 files mx | 5MB each max | JPG, JPEG, PNG</span>
                                 </UploadTextHolder>
                                 {(this.state.maxFiles || this.state.fileNotSupported )&& <Errmsg>{this.state.maxFiles ? "Maximun files to upload: 3" : this.state.fileNotSupported }</Errmsg>}
                             </UploadDocument>
                             <Head>
                                 <img src={require('../../../images/icons/titleicons_grad_reasons_24X24.svg')}/>
-                                Provide clear reasons for your refund
+                                Leave a message for the merchant
                             </Head>
-                            <Textarea maxLength="512" placeholder="Dispute reasons" onChange={(e) => this.onTextareaChangeHandler(e.target.value)} value={this.state.description}></Textarea>
-                            <span>* Up to 512 charaters</span>
+                            <Textarea maxLength="512" placeholder="Provide additional information" onChange={(e) => this.onTextareaChangeHandler(e.target.value)} value={this.state.description}></Textarea>
+                            <CharsNote>* Up to 512 charaters</CharsNote>
                             <ButtonsWrapper>
                                 <CancelButton onClick={() => this.props.close(product.itemId || 'all', this.state.mode)}><img src={require('../../../images/icons/buttonicons_cancel_16X16.svg')}/>Cancel</CancelButton>
                                 <SubmitButton onClick={() => this.saveDisputeDetails()}><img src={require('../../../images/icons/buttonicons_submit_16X16.svg')}/>Save</SubmitButton>

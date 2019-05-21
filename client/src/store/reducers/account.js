@@ -1,7 +1,7 @@
 import * as actionTypes from '../actions/actionTypes';
 import { updateObject } from '../../shared/utility';
 import update from 'immutability-helper';
-
+import { DISPUTE_UPDATES_HANDLER } from './handlers/disputeUpdatesHandler';
 const initialState = {
     reconnect: false,
     isMerchant: false,
@@ -17,8 +17,16 @@ const initialState = {
     fullNodeFee: {},
     networkFee: {},
     paymentRequest: {},
-    disputeDetails: {},
-    imagePreview: null
+    disputeDetails: {
+      disputeHash: null,
+      itemId: null,
+      documents: [],
+      comments: [],
+      history: []
+    },
+    imagePreview: null,
+    notifications: [],
+    userType: ''
 };
 
 const reconnect = (state, action) => {
@@ -29,8 +37,14 @@ const setAddresses = (state, { addresses }) => {
     return updateObject( state , { addresses: updatedMap } )
 }
 
-const setTrustScoreAndUserHash = (state, { trustScore, userHash }) => {
-    return updateObject( state , { trustScore, userHash } )
+const setTrustScoreAndUserHash = (state, { trustScore, userHash, userType }) => {
+    return updateObject( state , {
+         trustScore,
+         userHash, 
+         userType,
+         isMerchant: userType == "merchant", 
+         isArbitrator:userType == "arbitrator"
+      })
 }
 
 const setPaymentRequest = (state, { paymentRequest }) => {
@@ -96,32 +110,33 @@ const setTransactionsHistory = (state, { transactions }) => {
 }
 
 const setDisputeDetails = (state, {disputeDetailsResponse}) => {
-    return updateObject( state , { disputeDetails: disputeDetailsResponse } );
+   if(state.disputeDetails.disputeHash !== disputeDetailsResponse.disputeHash){
+      return updateObject( state , { disputeDetails: disputeDetailsResponse } );
+   }
+   const {comments, documents, itemId} = disputeDetailsResponse;
+   return updateObject( state , { disputeDetails: {...state.disputeDetails, comments, documents, itemId} } );
 }
 
 const updateTransactionHistory = (state, {transaction}) => {
    let transactionExist = state.transactions.get(transaction.hash);
    let transactions = new Map([...state.transactions]);
-   console.log("transactions: ", transactions)
-   console.log("transactionExist: ", transactionExist)
-   
    if(transactionExist){
-      if(transactionExist.length < 2) {
-         transactions.set(transaction.hash, [transaction]);
-      }else{
-         transactionExist = transactionExist.forEach((tx, idx) =>  { // send received self;
-            // if(tx.conse)  
-            // console.log('idx: ', idx)
-            // console.log("transaction.transactionConsensusUpdateTime: ", transaction.transactionConsensusUpdateTime)
-            // console.log("tx !== transaction: ", tx.transactionConsensusUpdateTime !== transaction.transactionConsensusUpdateTime)
-         })
+      let exist = false;
+      transactionExist = transactionExist.map((tx, idx) =>  { // send received self;
+         if(tx.transactionConsensusUpdateTime !== transaction.transactionConsensusUpdateTime){
+            tx = {...transaction}
+            exist = true;
+         }
+         return tx
+      })
+      if(!exist && transaction.transactionConsensusUpdateTime == null) {
+         transactionExist.push(transaction);
       }
+      transactions.set(transaction.hash, transactionExist);
    }
    else{
-      console.log("else transaction: ", transaction)
       transactions.set(transaction.hash, [transaction]);
    }
-   console.log('transactions::: ', transactions)
    return updateObject(state, {transactions})
 }
 
@@ -173,6 +188,19 @@ const updateDocumentsInItems = (state, {document}) => {
    }} );
 }
 
+const notificationChannelResponse = (state, {data}) => {
+   
+   return DISPUTE_UPDATES_HANDLER[data.event](state, data);
+   
+}
+const setNotifications = (state, {data}) => {
+   const notifications = data.unreadUserDisputeEvents.map(msg => {
+      msg.creationTime = msg.creationTime * 1000
+      return msg
+   }).filter(msg => msg.creationTime > new Date(new Date().getTime() - (48 * 60 * 60 * 1000)).getTime()); // remove filter to get all past notificaitons
+   return updateObject( state , { notifications });
+}
+
 
 const reducer = ( state = initialState, action ) => {
     switch ( action.type ) {
@@ -189,6 +217,9 @@ const reducer = ( state = initialState, action ) => {
         case actionTypes.SET_IMAGE: return showImage(state, action);
         case actionTypes.UPDATE_COMMENT_IN_ITEMS: return updateCommentsInItems(state, action);
         case actionTypes.UPDATE_DOCUMENT_IN_ITEMS: return updateDocumentsInItems(state, action);
+        case actionTypes.NOTIFICATION_CHANNEL: return notificationChannelResponse(state, action);
+        case actionTypes.SET_NOTIFICATIONS: return setNotifications(state, action);
+        
         default:
             return state;
     }

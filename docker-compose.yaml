@@ -9,7 +9,7 @@ services:
     ports:
       - "6000:6000"
     environment:
-      - REDIS_HOST="redis"
+      - REDIS_HOST=redis
     links:
       - "redis"
   redis:

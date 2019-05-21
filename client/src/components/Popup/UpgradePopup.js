@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import styled, {keyframes} from 'styled-components';
 import { fadeIn, slideInRight } from 'react-animations';
+import types from './walletTypes.json';
 const popupOpen = keyframes`${fadeIn}`;
 const popupOpenRight = keyframes`${slideInRight}`;
+
 
 const Layout = styled.div`
 	position: fixed;
@@ -176,7 +178,6 @@ class Popup extends Component {
    
     render(){
         const disabled = false;
-        const types = ['merchant', 'arbitrator', 'Full Node Operator'];
         return (<Layout id="popup" onClick={(e) => this.onClickOutside(e)}>
                     <Modal>
                         <Close onClick={() => this.props.close()}>+</Close>
@@ -187,18 +188,18 @@ class Popup extends Component {
                         <Subtitle>Please select one of the following (this selection cannot be undone):</Subtitle>
                         <OptionsContainer>
                             {types.map((type, i) => (
-                                <Option key={i} background={this.state.type === type ? 'rgb(252, 254, 255)' : disabled ? '#ebebeb' : 'fff'} disabled={disabled}>
-                                    <Label htmlFor={type}>
-                                        <RadioButton isChecked={this.state.type === type}><RadioButtonChecked isChecked={this.state.type === type}></RadioButtonChecked></RadioButton>
-                                        {type} 
+                                <Option key={i} background={this.state.type === type.value ? 'rgb(252, 254, 255)' : disabled ? '#ebebeb' : 'fff'} disabled={disabled}>
+                                    <Label htmlFor={type.value}>
+                                        <RadioButton isChecked={this.state.type === type.value}><RadioButtonChecked isChecked={this.state.type === type.value}></RadioButtonChecked></RadioButton>
+                                        {type.label} 
                                     </Label>
-                                    <RadioInput type="radio" id={type} name="wallet-type" onChange={(e) => this.onSelectTypeHandler(e)} value={type} disabled={disabled}/>
+                                    <RadioInput type="radio" id={type.value} name="wallet-type" onChange={(e) => this.onSelectTypeHandler(e)} value={type.value} disabled={disabled}/>
                                     {/* <label htmlFor={type}>
                                         <RadioInput type="radio" id={type} name="wallet-type" onChange={(e) => this.onSelectTypeHandler(e)} value={type} disabled={disabled}/>
                                         <span></span>
                                         {type}
                                     </label> */}
-                                    {this.state.type === type && <UpgradeBtn onClick={() => this.props.upgradeWallet(type)}>upgrade</UpgradeBtn>}
+                                    {this.state.type === type.value && <UpgradeBtn onClick={() => this.props.upgradeWallet(type.value)}>upgrade</UpgradeBtn>}
                                 </Option>
                             ))}
                             

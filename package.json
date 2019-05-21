@@ -1,10 +1,10 @@
 {
-  "name": "testnet-wallet",
+  "name": "crypto-wallet",
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
     "client": "cd client && yarn start",
-    "build": "cd client && rm -rf build && yarn build",
+    "build": "cd client && yarn build && mv prod/ last_prod/ && mv build/ prod/ && rm -rf last_prod",
     "server": "node server.js",
     "dev": "nodemon server.js"
   },

@@ -40,6 +40,7 @@ const Modal = styled.div`
         animation: 0.4s ${popupOpenRight};
         width: 100%;
         padding: 40px 0;
+        overflow-y: auto;
     }
 `
 const Close = styled.div`

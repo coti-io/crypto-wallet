@@ -1,11 +1,19 @@
 import * as actionTypes from "./actionTypes";
 
+export const getNodesList = (net) => {
+    return { type: actionTypes.GET_NODES_LIST, net };
+};
+
+export const setNodesList = (nodes, net) => {
+  return { type: actionTypes.SET_NODES_LIST, nodes, net };
+};
+
 export const setPage = pageName => {
-    return {
-      type: actionTypes.SET_PAGE,
-      page: pageName
-    };
+  return {
+    type: actionTypes.SET_PAGE,
+    page: pageName
   };
+};
 
 export const toggleModal = flag => {
   return {

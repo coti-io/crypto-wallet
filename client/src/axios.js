@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { SERVER_URL, TS_NODE_URL, FN_URL, FINANTIAL_SERVER } from './config';
+import { SERVER_URL, FINANCIAL_SERVER } from './config';
 
 const headers = {
     'Content-Type': 'application/json',
@@ -12,7 +12,11 @@ const multipartHeaders = {
 } 
 
 export const API = {
-    trustScore: () => axios.create({
+    nodesList: (net) => axios.create({
+        baseURL: `${net}/`,
+        headers: headers
+    }),
+    trustScore: (TS_NODE_URL) => axios.create({
         baseURL: `${TS_NODE_URL}/`,
         headers: headers
     }),
@@ -20,8 +24,8 @@ export const API = {
         baseURL: `${SERVER_URL}/api/v1/`,
         headers: headers
     }),
-    fullnode: (url) => axios.create({
-        baseURL: `${url}/`,
+    fullnode: (FULL_NODE_URL) => axios.create({
+        baseURL: `${FULL_NODE_URL}/`,
         headers: headers
     }),
     localServer: ({dev}) => axios.create({
@@ -29,10 +33,11 @@ export const API = {
         headers: headers
     }),
     financialServer: (multipart) => axios.create({
-        baseURL: `${FINANTIAL_SERVER}/`,
+        baseURL: `${FINANCIAL_SERVER}/`,
         headers: multipart ? multipartHeaders : headers
     })
 }
+
 
 
 

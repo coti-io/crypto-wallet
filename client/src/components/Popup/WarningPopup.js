@@ -35,7 +35,7 @@ const Modal = styled.div`
     flex-wrap: wrap;
     @media(max-width: 1060px){
         overflow-y: auto;
-        height: 100vh;
+        height: 100%;
     }
     @media(max-width: 768px){
         border-radius: unset;
@@ -87,8 +87,8 @@ const CancelButton = styled.button`
         margin-right: 10px;
     }
     @media(max-width: 768px){
-        margin-right: 0px;
         margin-bottom: 10px;
+        width: 130px;
     }
 `
 
@@ -107,6 +107,10 @@ const SubmitButton = styled.button`
     justify-content: center;
     cursor: pointer;
     outline: none;
+    @media(max-width: 768px){
+        width: 130px;
+        margin-bottom: 10px;
+    }
     & > img{
         width: 15px;
         height: 15px;

@@ -8,8 +8,11 @@ import { orderBy } from '../../shared/utility';
 import *  as actions from '../../store/actions/index';
 
 
-export const DisputesContainer = styled.div`
+const DisputesContainer = styled.div`
 	width:100%;
+    @media(max-width: 768px){
+        margin-top: 75px;
+    }
 `;
 
 const ArbitrationBox = styled.div`
@@ -18,6 +21,9 @@ const ArbitrationBox = styled.div`
 	background-color: #ffffff;
 	box-shadow: 0px 2px 3.9px 0.1px rgba(0, 0, 0, 0.15);
 	padding:30px;
+    @media(max-width: 768px){
+        margin-bottom: 20px;
+    }
 	@media(max-width: 480px){
 		margin: 10px 0;
         padding: 20px;

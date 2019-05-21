@@ -5,7 +5,7 @@ import styled, { keyframes } from "styled-components";
 import { fadeIn } from 'react-animations';
 import Row from '../Table/Row';
 import Pagination from '../Pagination/Pagination';
-
+import { orderBy } from '../../shared/utility';
 
 
 const fadePade = keyframes`${fadeIn}`
@@ -142,8 +142,8 @@ const Th = styled.th`
     &.action{
         width: 120px;
     }
-    &.Pending{
-        width: 17%;
+    &.vote{
+        width: 200px;
     }
     & > img{
       width: 11px;
@@ -165,7 +165,7 @@ const Th = styled.th`
 
 
 const TableWrapper = styled.div`
-    height: 310px;
+    height: 500px;
     overflow-y: auto;
     &::-webkit-scrollbar:horizontal  {
         height: 6px;
@@ -190,11 +190,17 @@ class Disputes extends Component {
     state = {
         disputesFiltered: [],
         from: 0,
-        to: 6
+        to: 8
     }
     
     componentDidMount() {
         this.createTable(this.state.from, this.state.to);	
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.receivedDisputes.size > 0 && nextProps.receivedDisputes !== this.props.receivedDisputes){
+            this.createTable(this.state.from, this.state.to, nextProps.receivedDisputes);
+        }
     }
     
     createDisputeObj(dispute){
@@ -212,9 +218,9 @@ class Disputes extends Component {
         }
 
         if(type === 'claimDisputes'){
-            disputenObj["pending arbitration"] = "yes";
-            disputenObj["assigned"] = dispute.creationTime;
-            disputenObj["close date"] = dispute.shani;
+            disputenObj["pending arbitration"] = this.findMaxDate(dispute.disputeItems);
+            disputenObj["assigned"] = dispute.arbitratorsAssignTime;
+            disputenObj["close date"] = dispute.closedTime;
         }
 
         if(type === 'sentDisputes'){
@@ -225,17 +231,29 @@ class Disputes extends Component {
         return disputenObj;
     }
 
+    findMaxDate(items){
+        const dates = [];
+        items = items.filter(item => item.status !== 'CanceledByConsumer' && item.status !== 'AcceptedByMerchant');
+        for(let i = 0; i < items.length; i++){
+            if(items[i].arbitratorItemVote === null){
+                return false
+            }
+            dates.push(items[i].arbitratorItemVote.voteTime)
+        }
+        return Math.max(...dates)
+    }
+
     createTable(from, to, updatedDisputes){
-        const {type} = this.props;
-        let disputes = Array.from(updatedDisputes || this.props[type].values());
+        const {type, isArbitrator} = this.props;
+        let disputes = Array.from(updatedDisputes ? updatedDisputes.values() : this.props[type].values());
         let disputesFiltered = [];
         disputes.forEach(dispute => {
             dispute.forEach(d => {
                 disputesFiltered.push(this.createDisputeObj(d))
             })
         })
-
-        disputesFiltered = this.sortByKey(disputesFiltered, 'opened');
+        const sortKey = isArbitrator ? 'assigned' : 'opened';
+        disputesFiltered = orderBy(disputesFiltered, sortKey, 'desc');
         disputesFiltered = disputesFiltered.filter((current, i) => i < to && i >= from);
         this.setState({
             ...this.state,
@@ -245,22 +263,13 @@ class Disputes extends Component {
         });
     }
 
-    sortByKey(array, key) {
-        return array.sort((a, b) =>{
-            let x = b[key];
-            let y = a[key]; 
-            return ((x < y) ? -1 : ((x > y) ? 1 : 0)) 
-        });
-    }
-
-
     render() {
         const {type} = this.props;
         const {isArbitrator} = this.props;
         const dataColumns = type === 'sentDisputes' 
                                 ? ['dispute hash', 'merchant', 'amount', 'opened', 'last updated', 'status', 'action']
                                 : isArbitrator  
-                                    ? ['dispute hash', 'assigned', 'Pending arbitration', 'status', 'close date', 'action'] 
+                                    ? ['dispute hash', 'assigned', 'Your vote received', 'status', 'close date', 'action'] 
                                     : ['dispute hash', 'amount', 'opened', 'last updated', 'status', 'action'];
         
         return(        
@@ -279,7 +288,7 @@ class Disputes extends Component {
                         </tbody>
                     </Table>
                 </TableWrapper>
-                {this.props[this.props.type].size > 0 && this.state.disputesFiltered.length > 0 && <Pagination maxRows={6} array={this.props[this.props.type].size} setFilterdRows={(from, to) => this.createTable(from, to)} maxPages={this.props.windowWidth > 768 ? 8 : 4}/>}
+                {this.props[this.props.type].size > 0 && this.state.disputesFiltered.length > 0 && <Pagination maxRows={8} array={this.props[this.props.type].size} setFilterdRows={(from, to) => this.createTable(from, to)} maxPages={this.props.windowWidth > 768 ? 8 : 4}/>}
             </DisputesContainer>
         )
     }
@@ -293,7 +302,8 @@ const mapStateToProps = ({ app, account }) =>{
         receivedDisputes: account.receivedDisputes,
         claimDisputes: account.receivedDisputes,
         windowWidth: app.windowWidth,
-        isArbitrator: app.isArbitrator
+        isArbitrator: account.isArbitrator,
+        userHash: account.userHash
     }
 }
 

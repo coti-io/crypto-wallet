@@ -145,17 +145,19 @@ class ActivityTopRow extends Component {
 	}
 	
 	render() {
+        const development = this.props.net == 'testnet' || this.props._development;
+
 		return (
 			<TransactionsTabsContainer isMerchant={this.props.isMerchant}>
 				<TransactionsTab onMouseEnter={()=>this.onHover('transactions',true)} onMouseLeave={()=>this.onHover('transactions',false)} className={ this.state.active === 'transactions' ? 'active' : '' } onClick={() => this.setActive('transactions') }>
 					<TransactionsIcon hover={this.state.hover === 'transactions'} active={this.state.active === 'transactions'}/>
 					<TransactionsTabText>Transactions</TransactionsTabText>
 				</TransactionsTab>
-				<TransactionsTab onMouseEnter={()=>this.onHover('sentDisputes',true)} onMouseLeave={()=>this.onHover('sentDisputes',false)} className={ this.state.active === 'sentDisputes' ? 'active' : '' } onClick={() => this.setActive('sentDisputes') }>
+                {development && <TransactionsTab onMouseEnter={()=>this.onHover('sentDisputes',true)} onMouseLeave={()=>this.onHover('sentDisputes',false)} className={ this.state.active === 'sentDisputes' ? 'active' : '' } onClick={() => this.setActive('sentDisputes') }>
 					<SentDisputesIcon hover={this.state.hover === 'sentDisputes'} active={this.state.active === 'sentDisputes'} />
 					<DisputesTabText isMerchant={this.props.isMerchant}>Sent Disputes</DisputesTabText>
-				</TransactionsTab>
-                {this.props.isMerchant && 
+				</TransactionsTab> }
+                {this.props.isMerchant && development && 
                 <TransactionsTab onMouseEnter={()=>this.onHover('receivedDisputes',true)} onMouseLeave={()=>this.onHover('receivedDisputes',false)} className={ this.state.active === 'receivedDisputes' ? 'active' : '' } onClick={() => this.setActive('receivedDisputes') }>
 					<ReceivedSentDisputesIcon hover={this.state.hover === 'receivedDisputes'} active={this.state.active === 'receivedDisputes'} />
 					<DisputesTabText isMerchant={this.props.isMerchant}>Received Disputes</DisputesTabText>
@@ -167,6 +169,8 @@ class ActivityTopRow extends Component {
 
 const mapStateToProps = ({account, app}) => {
     return {
+        net: app.net,
+        _development: app._development,
         isMerchant: account.isMerchant
     };
 }

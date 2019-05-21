@@ -1,0 +1,10 @@
+[{
+	"label": "Merchant",
+	"value": "merchant"
+}, {
+	"label": "Arbitrator",
+	"value": "arbitrator"
+}, {
+	"label": "Full Node Operator",
+	"value": "fullnode"
+}]

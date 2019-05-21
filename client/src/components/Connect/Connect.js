@@ -10,6 +10,7 @@ import { fadeIn, shake } from 'react-animations';
 import Select, { components } from 'react-select';
 import messages from '../../messages.json';
 import { getQueryVariable } from '../../shared/utility';
+import {CPS_URL} from '../../config';
 
 const ConnectedContainer = styled.div`
     display: flex;
@@ -42,12 +43,11 @@ const Heading = styled.h3`
     font-stretch: normal;
     line-height: 1.36;
     letter-spacing: normal;
-    text-align: center;
+    text-align: left;
     color: #333333;
-    margin: 50px 0;
+    margin: 20px;
     @media(max-width: 768px){
-        width: 184px;
-        margin: 50px auto 34px auto;
+        font-size: 13px;
     }
 `;
 
@@ -169,7 +169,7 @@ const customStylesPayment = {
         fontSize: "12px",
         borderBottom: "solid 1px #ebebeb",
         width:  "100%",
-        margin: "0 auto",
+        margin: "50px auto 20px",
         padding: "0 20px",
         boxSizing: 'border-box',
     }),
@@ -207,7 +207,7 @@ const customStylesPaymentMobile = {
         fontSize: "12px",
         borderBottom: "solid 1px #ebebeb",
         maxWidth:  "100%",
-        margin: "0 auto",
+        margin: "50px auto 20px auto",
         padding: "0 20px",
         boxSizing: 'border-box',
     }),
@@ -336,6 +336,9 @@ const NodeItem = styled.li`
     font-family: ClanOT-Book;
     width: ${props => props.width};
     font-weight: bold;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    margin: auto;
     &:not(:first-child){
         text-align: center;
     }
@@ -373,12 +376,16 @@ class Connect extends Component {
     state = { 
         cpsError: false,
         generateSuccess: false,
+        updateUserTypeSuccess: false,
         seedInvalid: false,
         nodeNotSelected: false,
+        nodeList: [],
         showNodeList: false,
+        nodeList: [],
         payment: false,
         recommendedFullNode: {},
         seed: '',
+        net: {value: 'mainnet', label: 'MAINNET'},
     }
 
     componentDidMount() {
@@ -386,31 +393,62 @@ class Connect extends Component {
             ...this.state,
             payment: this.props.location.pathname === '/payment'
         });
-        
-	}
-
+        if(process.env.NODE_ENV !== "development" ){
+            document.getElementsByName('seed')[0].setAttribute('autoComplete' ,'off')
+        }
+    }
+    
+    
     componentWillMount(){
-        const generateSuccess = getQueryVariable("generateSuccess")
-        const cpsError = getQueryVariable("error")
-        const userseed = getQueryVariable("userseed")
         
-        if(generateSuccess){
-            this.setState({
-                ...this.state,
-                generateSuccess
-            });
+        const generateSuccess = getQueryVariable("generateSuccess");
+        const cpsError = getQueryVariable("error");
+        const userseed = getQueryVariable("userseed");
+        const updateUserTypeSuccess = getQueryVariable("updateUserTypeSuccess");
+        const net = getQueryVariable("net");
+        
+        let nodeManagerNet = this.state.net.value;
+        let state = {}
+
+        if(net){
+            state.net = {value: net, label: net.toUpperCase()}
+            nodeManagerNet = net
+        }
+
+        if(userseed){
+            state.seed = userseed
+        }
+
+        if(cpsError){
+            state.cpsError = cpsError
+        }
+        
+        
+        if(generateSuccess){   
+            state.generateSuccess = generateSuccess
             setTimeout(() => {
                 this.setState({generateSuccess: false});
             }, 6000)
         }
 
-        if(cpsError){
-            this.setState({...this.state,cpsError});
+        if(updateUserTypeSuccess){
+            state.updateUserTypeSuccess = updateUserTypeSuccess
+            setTimeout(() => {
+                this.setState({
+                    ...this.state,
+                    updateUserTypeSuccess: false
+                });
+            }, 6000)
         }
         
-        if(userseed !== null && userseed !== undefined){
-            this.setState({...this.state, seed: userseed})
-        }
+        this.props.getNodesList(nodeManagerNet);
+
+        this.setState({
+            ...this.state,
+            ...state
+        });
+
+        
     }
 
     handleChange = (name, value ) => {
@@ -450,22 +488,38 @@ class Connect extends Component {
         });
     }
 
-    handleSelectChange(option){
+    handleSelectChange = (option) => {
         if(option.value === 'alphanet'){
-            window.location.href = 'https://alpha-wallet.coti.io/connect';
+            return window.location.href = 'https://alpha-wallet.coti.io/connect';
         }
+        this.props.getNodesList(option.value);
+        this.setState({
+            ...this.state,
+            net: option
+        });
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if(process.env.NODE_ENV !== "development" ){
+            const seed_input = document.getElementsByName('seed')
+            seed_input.length && seed_input[0].setAttribute('autoComplete' ,'off') ;
+        }    
     }
 
     componentWillReceiveProps(nextProps){
+        
+        if(nextProps.nodeList && Object.keys(nextProps.nodeList).length){
+            this.setState({...this.state, nodeList: nextProps.nodeList.FullNodes});
+        }
         if(nextProps.reconnect){
             this.connect(this.state.seed, true);
         }
         if(nextProps.recommendedFullNode){
-            const recommendedFullNode = nextProps.nodeList.filter(node => node.address == JSON.parse(nextProps.recommendedFullNode))[0];
+            const recommendedFullNode = nextProps.nodeList.filter(node => node.httpAddress == JSON.parse(nextProps.recommendedFullNode))[0];
             this.setState({...this.state, recommendedFullNode});
         }
-        
     }
+
 
     isSeedValid(value){
         if(value.length !== 64){
@@ -477,7 +531,7 @@ class Connect extends Component {
         const pathName = this.props.location.pathname;
         const { nodeNotSelected } = this.state;
         const {selectedNode} = this.props;
-        const msg = this.state.cpsError || this.state.generateSuccess;
+        const msg = this.state.cpsError || this.state.generateSuccess || this.state.updateUserTypeSuccess;
         const { nodeList } = this.props;
         const { returnUrl } = this.props.paymentRequest;
         
@@ -488,15 +542,25 @@ class Connect extends Component {
                         <Logo margin={pathName === '/payment' && 'auto'}/>
                         { msg && 
                             <TooltipContainer>
-                                <TooltipInner error={this.state.cpsError}>{this.state.cpsError ? messages[this.state.cpsError] : messages[this.state.generateSuccess] }
+                                <TooltipInner error={this.state.cpsError}>{this.state.cpsError ? messages[this.state.cpsError] : this.state.updateUserTypeSuccess || messages[this.state.generateSuccess] }
                                 {this.state.cpsError && <span onClick={()=>this.setState({...this.state, cpsError: false})}>+</span>}
                                 </TooltipInner>
                             </TooltipContainer> 
                         }
+                        
+                        <Holder>
+                        {pathName === '/connect' && <Select
+                                                            components={{ DropdownIndicator }}
+                                                            onChange={this.handleSelectChange}
+                                                            styles={this.props.windowWidth > 768 ? customStylesPayment : customStylesPaymentMobile}
+                                                            placeholder="testnet"
+                                                            defaultValue={this.state.net}
+                                                            options={[{value: 'mainnet', label: 'MAINNET'}, {value: 'testnet', label: 'TESTNET'}, {value: 'alphanet', label: 'ALPHANET'}]}
+                                                        />}
+
                         <Heading>
                             Please enter your seed to connect your wallet
                         </Heading>
-                        <Holder>
                             <Input 
                                 maxWidth={pathName === '/payment' && '414'} 
                                 showError={this.state.seedInvalid} 
@@ -513,37 +577,30 @@ class Connect extends Component {
                                 onClick={() => this.setState({...this.state, showNodeList: !this.state.showNodeList, nodeNotSelected: false})}>
                                 {this.state.payment || (!this.state.payment && Object.keys(this.props.selectedNode).length > 0)
                                     ? <NodeSelectedRow>
-                                        <NodeItem width={this.state.payment || this.props.windowWidth < 769 ? "150px" : "210px"}>Node {selectedNode.nodeName || this.state.recommendedFullNode.nodeName}</NodeItem>
-                                        <NodeItem width="50px">{selectedNode.fee || this.state.recommendedFullNode.fee}</NodeItem>
-                                        <NodeItem width="70px">{selectedNode.maxFee || this.state.recommendedFullNode.maxFee} <Coti>COTI</Coti></NodeItem>
-                                        <NodeItem width="50px">{selectedNode.trustScore || this.state.recommendedFullNode.trustScore}</NodeItem>
+                                        <NodeItem width={this.state.payment || this.props.windowWidth < 769 ? "150px" : "210px"}>{selectedNode.nodeHash || this.state.recommendedFullNode.nodeHash}</NodeItem>
+                                        <NodeItem width="50px">{selectedNode.feeData.feePercentage || this.state.recommendedFullNode.feeData.feePercentage}%</NodeItem>
+                                        <NodeItem width="70px">{selectedNode.feeData.maximumFee || this.state.recommendedFullNode.feeData.maximumFee} <Coti>COTI</Coti></NodeItem>
+                                        <NodeItem width="50px">{selectedNode.feeData.minimumFee || this.state.recommendedFullNode.feeData.minimumFee}</NodeItem>
                                         </NodeSelectedRow>
                                     : 'Choose node to connect'}
                                 <img src={require('../../images/icons/crescent-dd_12X6.svg')} alt=""/>
                                 {nodeNotSelected && <Error>PLEASE SELECT NODE TO CONNECT</Error>}
                             </SelectNode>
                             
-                            {pathName === '/connect' && <Select
-                                                            components={{ DropdownIndicator }}
-                                                            onChange={this.handleSelectChange}
-                                                            styles={this.props.windowWidth > 768 ? customStylesPayment : customStylesPaymentMobile}
-                                                            placeholder="testnet"
-                                                            defaultValue={{value: 'testnet', label: 'TESTNET'}}
-                                                            options={[{value: 'testnet', label: 'TESTNET'}, {value: 'alphanet', label: 'ALPHANET'}]}
-                                                        />}
+
                         </Holder>
                         
                         <Button onClick={() => this.connect(this.state.seed)}>
                             <img src={require('../../images/icons/buttonicons_connect_16X16.svg')}/>
                             {pathName === '/payment' ? 'pay now' : 'connect'}
                         </Button>
-                        <ForgotSeed href="https://cps-qa.coti.io/alpha?generate=false&net=testnet"> Forgot your seed? </ForgotSeed>
+                        <ForgotSeed href={`${CPS_URL}/alpha?generate=false&net=${this.state.net.value}`}> Forgot your seed? </ForgotSeed>
                         <Or width={pathName === '/payment' ? '100' : ''}>
                             <div></div>
                             <p>Or</p>
                         </Or>
                         <GenerateSeed 
-                            onClick={() => window.location = "https://cps-qa.coti.io/alpha?generate=true&net=testnet"} 
+                            onClick={() => window.location = `${CPS_URL}/alpha?generate=true&net=${this.state.net.value}`} 
                             background={pathName === '/payment' ? '#fff' : '#2bbfdf'}
                             color={pathName === '/payment' ? '#2bbfdf' : '#fff'}
                             marginBottom={pathName === '/payment' && '0'}
@@ -555,7 +612,7 @@ class Connect extends Component {
                     </ConnectedContainer>}
                     {this.state.showNodeList && 
                     <NodeList 
-                        nodeList={nodeList} 
+                        nodeList={this.state.nodeList} 
                         windowWith={this.props.windowWidth} 
                         onSelectNode={(node) => this.handleSelectNode(node)}
                         close={() => this.setState({...this.state, showNodeList: false})}
@@ -579,6 +636,7 @@ const mapStateToProps = ({app, account}) => ({
 
 const mapDispatchToProps = dispatch => {
   return {
+    getNodesList: (net) => dispatch(actions.getNodesList(net)),
     connect: (seed, node, payment) => dispatch(actions.connect(seed, node, payment)),
     onSelectNode: (node) => dispatch(actions.onSelectNode(node)),
     toggleSpinner: flag => dispatch(actions.toggleSpinner(flag))

@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import {Link} from 'react-router-dom';
 import styled from 'styled-components';
 import moment from 'moment';
-
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+import { orderBy } from '../../../shared/utility';
 
 const DisputeHistoryTitleContainer = styled.div`
 	display: flex;
@@ -73,6 +75,7 @@ const Title = styled.div`
 	margin-bottom: ${({marginBottom}) => marginBottom && '20px'};
 	display: flex;
     align-items: center;
+	position: relative;
 	& > span{
 		font-weight: normal;
 	}
@@ -94,10 +97,18 @@ const Time = styled.div`
 	}
 `
 
-export default class DisputeHistory extends Component{
+const Decision = styled.p`
+	position: absolute;
+    left: 33px;
+    bottom: -30px;
+    font-weight: normal;
+`
+
+class DisputeHistory extends Component{
 
 	state = {
-		status: ''
+		status: '',
+		history: []
 	}
 
 	componentDidMount(){
@@ -108,9 +119,70 @@ export default class DisputeHistory extends Component{
 	}
 
 	componentWillReceiveProps(nextProps){
+
 		const updatedStatus = nextProps.dispute.disputeItems.filter(item => item.id == this.props.currentItem)[0].status;
 		if(updatedStatus !== this.state.status){
 			this.setState({...this.state, status: updatedStatus})
+		}
+		if(nextProps.disputeDetails.disputeHash !== this.props.disputeDetails.disputeHash || 
+			((nextProps.disputeDetails.history && this.props.disputeDetails.history) &&  nextProps.disputeDetails.history.length !== this.props.disputeDetails.history.length)){
+			this.setState({
+				history: nextProps.disputeDetails.history
+			});
+		}
+	}
+
+	getItemStatusBySide({eventDisplaySide, eventObject}){
+		switch(eventDisplaySide) {
+			case 'Consumer':
+				return eventObject.disputeItemStatus
+			case 'Arbitrator':
+				return eventObject.status
+			case 'Merchant':
+				return eventObject.disputeItemStatus
+		  }
+	}
+
+	displayItemHistory(){
+		const itemHistory = this.state.history.filter(x => x.eventObject.itemId == this.props.currentItem)
+		let historyOrderdByDate = orderBy(itemHistory, ['creationTime'], ['asc']);
+		historyOrderdByDate = historyOrderdByDate.map(x => ({date: x.creationTime, status: this.getItemStatusBySide(x)}));
+		return historyOrderdByDate.map(({status, date}, i) => {
+			if(status && status !== "AcceptedByArbitrators" && status !== "RejectedByArbitrators"){
+				return (
+					<Li key={i} borderBottom paddingTop paddingBottom>
+						<Title>{statuses[status]}</Title>
+						<Time>{moment(date*1000).format('LLLL')}</Time>
+					</Li>
+				)
+			}
+		})
+	}
+
+	displayDecision(decision){
+		if(decision === 'AcceptedByArbitrators'){
+			return <Decision>Decision: accepted</Decision>
+		}
+		else if(decision === 'RejectedByArbitrators'){
+			return <Decision>Decision: rejected</Decision>
+		}
+	}
+
+	checkIfArbitrationCompleted(closedTime){
+		const itemHistory = this.state.history.filter(x => x.eventObject.itemId == this.props.currentItem)
+		for(let i = 0; i < itemHistory.length; i++){
+			if(itemHistory[i].eventObject.disputeItemStatus === "RejectedByArbitrators" || itemHistory[i].eventObject.disputeItemStatus === "AcceptedByArbitrators"){
+				return (
+					<Li paddingTop paddingBottom>
+						<Title>
+							<img src={require('../../../images/icons/popupIcon_successDeposit_66X66.svg')}/>
+							Arbitration completed
+							{this.displayDecision(itemHistory[i].eventObject.disputeItemStatus)}
+						</Title>
+						<Time>{moment(closedTime*1000).format('LLLL')}</Time>
+					</Li>
+				)
+			}
 		}
 	}
 	
@@ -120,8 +192,6 @@ export default class DisputeHistory extends Component{
 		const itemUnits = this.props.disputedItems.filter(item => item.id == this.props.currentItem)[0].units;
 		const itemAmount = this.props.disputedItems.filter(item => item.id == this.props.currentItem)[0].amount;
 		const reason = this.props.disputedItems.filter(item => item.id == this.props.currentItem)[0].reason;
-		const arbitrationStarted = false;
-		const arbitrationCompleted = false;
 		return (
 			<List>
 				<Li paddingTop>
@@ -140,25 +210,8 @@ export default class DisputeHistory extends Component{
 						{reason === 'NotAsDescribed' && <span>Item not as described</span>}
 					</Title>
 				</Li>
-				{this.state.status !== 'Recall' && <Li borderBottom paddingTop paddingBottom>
-					<Title>
-						{this.state.status === 'Claim' && 'Arbitration started'}
-						{this.state.status === 'RejectedByMerchant' && 'Rejected by merchant'}
-						{this.state.status === 'AcceptedByMerchant' && 'Accepted by merchant'}
-						{this.state.status === 'CanceledByConsumer' && 'Cancelled by consumer'}
-						{this.state.status === 'AcceptedByArbitrators' && 'Accepted by arbitrator'}
-						{this.state.status === 'RejectedByArbitrators' && 'Rejected by arbitrator'}
-					</Title>
-					<Time>{moment(dispute.updateTime * 1000).format('LLLL')}</Time>
-				</Li>}
-				{arbitrationStarted && <Li borderBottom paddingTop paddingBottom>
-					<Title>Arbitration started</Title>
-					<Time>{moment(dispute.createdAt * 1000).format('LLLL')}</Time>
-				</Li>}
-				{arbitrationCompleted && <Li paddingTop paddingBottom>
-					<Title><img src={require('../../../images/icons/popupIcon_successDeposit_66X66.svg')}/>Arbitration completed</Title>
-					<Time>{moment(new Date()).format('LLLL')}</Time>
-				</Li>}
+				{this.state.history.length > 0 && this.displayItemHistory()}
+				{this.checkIfArbitrationCompleted(dispute.closedTime)}
 			</List>
 		)
 	}
@@ -176,9 +229,24 @@ export default class DisputeHistory extends Component{
 	}
 }
 	
+const statuses = {
+	RejectedByMerchant: 'Rejected by merchant',
+	AcceptedByMerchant: 'Accepted by merchant',
+	CanceledByConsumer: 'Cancelled by consumer',
+	Claim: 'Arbitration started',
+	AcceptedByArbitrator: 'Arbitration vote: accepted',
+	RejectedByArbitrator: 'Arbitration vote: rejected',
+	RejectedByArbitrators: 'Arbitration completed',
+	AcceptedByArbitrators: 'Arbitration completed'
+}
 
 
+const mapStateToProps = ({account}) => {
+    return {
+        disputeDetails: account.disputeDetails
+    };
+}
 
-
+export default connect(mapStateToProps, null)(withRouter(DisputeHistory));
 
 

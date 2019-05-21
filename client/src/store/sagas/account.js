@@ -1,21 +1,30 @@
-import { put, select, take, fork, call } from "redux-saga/effects";
+import { put, select, take, fork, call, all } from "redux-saga/effects";
 import { eventChannel } from "redux-saga";
 import * as actions from "../actions/index";
 import { push } from 'connected-react-router'
 import { walletEncryption, cryptoUtils, addresses, BaseTransaction, Transaction, Signature } from 'coti-encryption-library';
-import { getNodeUrl, getUserHash, getUserTrustScore, getfullNodeFee, getNetworkFee, getPaymentRequest as getPaymentRequestFromState } from './selectors'; 
+import { getNet, isMerchant, isArbitrator, getNodeUrl, getTSNode, getUserHash, getUserTrustScore, getfullNodeFee, getNetworkFee, getPaymentRequest as getPaymentRequestFromState } from './selectors'; 
 import { API } from "../../axios";
 import { getQueryVariable } from "../../shared/utility";
-import { CPS_QA_URL } from "../../config";
+import { CPS_URL } from "../../config";
 import webstomp from 'webstomp-client';
 import SockJS from "sockjs-client";
-import {FINANTIAL_SERVER} from '../../config';
+import {FINANCIAL_SERVER} from '../../config';
+let TS_NODE_URL;
 
 const bigdecimal = require("bigdecimal");
-
-let subscriptions = [];
-let Wallet = null;
+export let Wallet = null;
 let Client = null;
+let Client2 = null;
+let subscriptions = [];
+
+function* getRandomTSNode(){
+  const nodes = yield select(getTSNode)
+  const min = 0;
+  const max = nodes.length - 1;
+  const rand = Math.floor(Math.random() * (max - min) + min);
+  return nodes[rand].httpAddress;
+}
 
 export function* isWallet() {
     if(Wallet === null) yield put(push(`/connect`));
@@ -39,36 +48,44 @@ export function* getPaymentRequest(){
 
 export function* connect({seed, node, payment}){
     let userHash;
+    const net = yield select(getNet);
     try{
-        Wallet = new walletEncryption(seed);
+        TS_NODE_URL =  yield call(getRandomTSNode);
+        Wallet = new walletEncryption({seed});
         const keyPair = Wallet.getKeyPair();
         userHash = cryptoUtils.paddingPublicKey(keyPair.getPublic().x.toString('hex'), keyPair.getPublic().y.toString('hex'));
         const { data } = yield call(getTrustScoreMessage, userHash );
-        yield put(actions.setTrustScoreAndUserHash({trustScore: parseFloat(data.trustScore).toFixed(2), userHash: data.userHash }))        
+        yield put(actions.setTrustScoreAndUserHashAndUserType({trustScore: parseFloat(data.trustScore).toFixed(2), userHash: userHash, userType: data.userType }))  
         payment = payment ? userHash : false;
-        yield call(getAddressesDetailsForSeed, node.address, payment);
+        yield call(getAddressesDetailsForSeed, node.httpAddress, payment);
         
     }
     catch(e){
         console.log("e: ", e) // create action to pass the error message to connect component
+        yield put(actions.toggleSpinner(false));
         if(e && !e.response){
-          yield put(actions.toggleSpinner(false));
           yield put(actions.updateTooltipMsg(e));
+        }        
+        else if(e && e.response){
+          if(e.response.status === 400 && e.response.data.message === "User does not exist!"){
+            return window.location = `${CPS_URL}/alpha?userhash=${userHash}&&net=${net}`;
+          }
+          yield put(actions.updateTooltipMsg('Server is temporally unavailable. Please try again in a few minutes', true));
         }
-        if(e.response.status === 400 && e.response.data.message === "User does not exist!"){
-            window.location = `${CPS_QA_URL}/alpha?userhash=${userHash}&&net=testnet`;
-        }
+
     }
 }
 
-const getTrustScoreMessage = (userHash) => API.trustScore().post(`/usertrustscore`, {userHash} )
+const getTrustScoreMessage = (userHash) => API.trustScore(TS_NODE_URL).post(`/usertrustscore`, {userHash} )
 
-const getTrustScoreFromTsNode = ({userHash, transactionHash, userSignature}) => API.trustScore().post(`/transactiontrustscore`, {userHash, transactionHash, userSignature});
+const getTrustScoreFromTsNode = ({userHash, transactionHash, userSignature}) => API.trustScore(TS_NODE_URL).post(`/transactiontrustscore`, {userHash, transactionHash, userSignature});
 
 function* openSocketConnection(nodeUrl) {
     const socket = new SockJS(`${nodeUrl}/websocket`);
+    const socket2 = new SockJS(`${FINANCIAL_SERVER }/websocket`);
     
     Client = webstomp.over(socket);
+    Client2 = webstomp.over(socket2);
 }
 
 export function* getAddressesDetailsForSeed(node, userHash) {
@@ -95,22 +112,18 @@ export function* getAddressesDetailsForSeed(node, userHash) {
     }
   }
   if(!userHash){
-    if(addressesThatExists.length === 0){
-      yield put(push("/"));
-      yield put(actions.setPage("/"));
-      yield put(actions.toggleSpinner(false));
-    }else{
+    if(addressesThatExists.length > 0){
       yield call(getBalances, addressesThatExists, node);
       yield call(getTransactionsHistory, addressesThatExists, node);
-      yield call(getDisputesHistory, node);
-      
-      yield put(push("/"));
-      // const url = '/disputeDetails/741b3b20a10e9475bd1f3263181562dac1dd315858e59297300dacefa5034021/c1f0782a99851e407df834c1d92e9d2213d4edcf04cec116796d2be0baeb8139'
-      // yield put(push(url))
-      yield put(actions.toggleSpinner(false));
+      yield call(getDisputesHistory);
     }
+    yield call(GetUnreadNotifications);
+    yield put(actions.setPage("/"));
+    yield put(push("/"));
+    yield put(actions.toggleSpinner(false));
     yield call(openSocketConnection, node);
     yield call(socketSubscriber);
+    
   }else{
     if(addressesThatExists.length < 1){
       yield put(actions.toggleWarningPopup({message: "There is no address in your wallet!"}));     
@@ -122,11 +135,30 @@ export function* getAddressesDetailsForSeed(node, userHash) {
   }
 } 
 
-export function* getDisputesHistory(){
-  const disputeSide = 'Consumer';
-  const userSignature = new Signature.GetDisputes(disputeSide).sign(Wallet);
-  
+
+function* GetUnreadNotifications(){
   const userHash = yield select(getUserHash);
+  let unreadEventsData = {};
+  const ts = new Date().getTime();
+  unreadEventsData.userHash = userHash;
+  unreadEventsData.creationTime = (ts / 1000);
+  unreadEventsData.userSignature = new Signature.GetUnreadNotifications(String(ts)).sign(Wallet);
+  // console.log("unreadEventsData: ", unreadEventsData);
+  try {
+    const {data} = yield API.financialServer().post(`/event/unread`,JSON.stringify({unreadEventsData}));
+    if(!data) return
+    yield put(actions.setNotifications(data));
+  }catch(err){
+    console.log("err: ", err)
+  }
+}
+
+export function* getDisputesHistory(disputeSide){
+  const userHash = yield select(getUserHash);
+  const isMerchantUser = yield select(isMerchant);
+  const isArbitratorUser = yield select(isArbitrator);
+  disputeSide = disputeSide ? disputeSide : isMerchantUser ? 'Merchant' : isArbitratorUser ? 'Arbitrator' : 'Consumer';
+  const userSignature = new Signature.GetDisputes(disputeSide).sign(Wallet);
   let disputesData = {
 		userHash,
     disputeSide,
@@ -139,6 +171,7 @@ export function* getDisputesHistory(){
   } catch (error) {
     console.log('getDisputesHistory error: ', error)
   }
+  if(disputeSide != 'Consumer') yield call(getDisputesHistory, "Consumer");
 }
 
 function* sendPR(node, userHash){
@@ -233,17 +266,62 @@ function* socketSubscriber() {
     Client.connect({}, () => {
       console.log('connected');
       resolve();
-    }, (err)=>  {
+    }, function*(err){
       console.log("webStomp connection error: ", err)
-      call(connectPromise);
+      yield call(connectPromise);
     })
   });
+  const connectWSPromise = new Promise((resolve, reject) => {
+    Client2.connect({}, () => {
+      console.log('connected');
+      resolve();
+    }, function*(err){
+      console.log("webStomp connection error: ", err)
+      yield call(connectWSPromise);
+    });
+  });
+
   yield connectPromise;   
+  yield connectWSPromise;   
+  yield all([
+    call(watcherAddress),
+    call(watcherDisputes)
+  ]);
+}
+
+function* watcherAddress() {
   const channel = yield call(connectToAddresses);
   while (true) {
     const action = yield take(channel);
     yield put(action);
   }
+}
+function* watcherDisputes() {
+  const channel2 = yield call(notificationChannel);
+  while (true) {
+    const action2 = yield take(channel2);
+    yield put(action2);
+  }
+}
+
+function* notificationChannel() {
+  let userHash = yield select(getUserHash);
+  return eventChannel(emitter => {
+    Client2.subscribe(`/topic/user/${userHash}`, ({body}) => {
+      try {
+        body = JSON.parse(body);  
+         emitter(actions.notificationChannelResponse(body));
+      }catch (err) {
+        if(err){
+          console.log("notificationChannel err: ", err)
+          emitter(actions.updateTooltipMsg(err.response.data.message, true))
+        } 
+      }
+    });
+    return () => {
+      console.log('Socket off');
+    }
+  });
 }
 
 function* getBalances( addresses, node ) {
@@ -271,32 +349,38 @@ function* getBalances( addresses, node ) {
 }
 
 function* getTransactionsHistory(addresses, node) {
+  if(!node){
+    const selectedNode = yield select(getNodeUrl);
+    node = selectedNode.httpAddress;
+  }
   let transactionsHistory = new Map();
   for (let address of addresses) {
     let {data} = yield API.fullnode(node).post(`/transaction/addressTransactions`,JSON.stringify({address}));
     let {transactionsData} = data
     if (transactionsData.length > 0){
       transactionsData.forEach(transaction => {
-        let transactionExist = transactionsHistory.get(transaction.hash);
-        if(transactionExist){
-          transactionExist.push(transaction);
-          transactionsHistory.set(transaction.hash, transactionExist);
-        }else{
-          transactionsHistory.set(transaction.hash, [transaction]);
-        }
+        transaction.createTime = transaction.createTime * 1000;
+          let transactionExist = transactionsHistory.get(transaction.hash);
+          if(transactionExist){
+            if(transactionExist.length < 2) {
+              transactionExist.push(transaction);
+              transactionsHistory.set(transaction.hash, transactionExist);
+            }
+          }else{
+            transactionsHistory.set(transaction.hash, [transaction]);
+          }
       })
+      yield put(actions.setTransactionsHistory(transactionsHistory));
     }
   }
-
-  yield put(actions.setTransactionsHistory(transactionsHistory));
 } 
 
 
 export function* generateAddress(addressSubscription){ 
     
   // const initialBalance = new bigdecimal.BigDecimal(0);
-  let indexOfAddress = 0;
-  let address = addressSubscription || "";
+  let indexOfAddress = addressSubscription ? Wallet.getIndexByAddress(addressSubscription) : 0;
+  let address = "";
   do {
     address = Wallet.generateAddressByIndex(indexOfAddress);
     indexOfAddress = indexOfAddress + 1;
@@ -306,26 +390,14 @@ export function* generateAddress(addressSubscription){
   // Wallet.setAddressWithBalance(address, initialBalance, initialBalance);
   // yield put(actions.setAddresses(Wallet.getWalletAddresses()));
 
-  yield(call(sendAddressToNode, address));
+  yield call(sendAddressToNode, address);
  
 }
 
 function* sendAddressToNode(address){
   const node = yield select(getNodeUrl);
   try{
-    yield API.fullnode(node.address).put(`/address`, JSON.stringify({ "address": address.getAddressHex() })); 
-    let balanceResult = yield API.fullnode(node.address).post(`/balance`, JSON.stringify({ "addresses": [address.getAddressHex()]})); 
-    
-    const body = {
-      addressHash : address.getAddressHex(),
-      balance :balanceResult.data.addressesBalance[address.getAddressHex()].addressBalance ,
-      preBalance :balanceResult.data.addressesBalance[address.getAddressHex()].addressPreBalance ,
-    };
-    
-    Wallet.setAddressWithBalance(address, new bigdecimal.BigDecimal(body.balance), new bigdecimal.BigDecimal(body.preBalance));      
-    yield put(actions.setAddresses(Wallet.getWalletAddresses()));
-    yield call(connectToAddress, address);
-    // add notification to address was added
+    yield API.fullnode(node.httpAddress).put(`/address`, JSON.stringify({ "address": address.getAddressHex() })); 
   }catch(err){
     if(err) console.log("generateAddress err: ", err)
     // yield put(actions.updateTooltipMsg(err.response.data.message))
@@ -377,9 +449,9 @@ function* connectToAddresses() {
           const addressHex = parsedBody.addressHash;
           emitter(actions.updateTooltipMsg(`Address ${addressHex} is generated`));
           if(!walletAddressesList.has(addressHex)){
-            addressPropogationSubscription.unsubscribe();
-            subscriptions = subscriptions.filter(s => s !== addressPropogationSubscription);
-            emitter(actions.addressSubscription(addressHex));
+            // addressPropogationSubscription.unsubscribe();
+            // subscriptions = subscriptions.filter(s => s !== addressPropogationSubscription);
+            emitter(actions.addressSubscription(addressHex, addressPropogationSubscription));
           }
         }catch (err) {
           if(err){
@@ -396,15 +468,41 @@ function* connectToAddresses() {
 }
 
 export function* addressSubscription({address,subscription}) {
-    const walletAddressesList = Wallet.getWalletAddresses();
-    if(walletAddressesList.get(address)){
-      return;
-    }
-    if(subscription){
-      subscription.unsubscribe()
-      subscriptions = subscriptions.filter(s => s !== subscription);    
-    }
-    yield call(generateAddress, address);
+  const node = yield select(getNodeUrl);
+  const walletAddressesList = Wallet.getWalletAddresses();
+  if(walletAddressesList.get(address)){
+    return;
+  }
+  if(subscription){
+    subscription.unsubscribe()
+    subscriptions = subscriptions.filter(s => s !== subscription);    
+  }
+
+  let addressGenerated;
+  const getIdx = Wallet.getIndexByAddress(address);
+  let indexOfAddress =  getIdx ? getIdx : 0;
+  do {
+    addressGenerated = Wallet.generateAddressByIndex(indexOfAddress);
+    indexOfAddress = indexOfAddress + 1;
+  } while (addressGenerated.getAddressHex() != address );
+  
+  let {data} = yield API.fullnode(node.httpAddress).post(`/balance`, JSON.stringify({ "addresses": [address]})); 
+  
+  const body = {
+    addressHash : addressGenerated.getAddressHex(),
+    balance : String(data.addressesBalance[addressGenerated.getAddressHex()].addressBalance),
+    preBalance : String(data.addressesBalance[addressGenerated.getAddressHex()].addressPreBalance),
+  };
+  
+  Wallet.setAddressWithBalance(addressGenerated, new bigdecimal.BigDecimal(body.balance), new bigdecimal.BigDecimal(body.preBalance));      
+
+  yield put(actions.setAddresses(Wallet.getWalletAddresses()));
+
+  yield call(getTransactionsHistory, [addressGenerated.getAddressHex()]);
+
+  yield call(connectToAddress, addressGenerated);
+
+    
 }
 
 
@@ -464,10 +562,9 @@ function* subscribeToAddress(address) {
 }
 
 export function* getFnFees({amountToTransfer}){
-  console.log('amountToTransfer: ', amountToTransfer)
   const node = yield select(getNodeUrl);
   try {
-    const { data } = yield API.fullnode(node.address).put(`/fee`, {"originalAmount" : amountToTransfer})
+    const { data } = yield API.fullnode(node.httpAddress).put(`/fee`, {"originalAmount" : amountToTransfer})
     yield call(getNetworkFees, data.fullNodeFee);
   }catch(error){
     console.log("error: ", error)
@@ -477,7 +574,7 @@ export function* getFnFees({amountToTransfer}){
 export function* getNetworkFees(fullNodeFee){
   let userHash = yield select(getUserHash);
   try {
-    const { data } = yield API.trustScore().put(`/networkFee`, { "fullNodeFeeData" : fullNodeFee , "userHash" : userHash})
+    const { data } = yield API.trustScore(TS_NODE_URL).put(`/networkFee`, { "fullNodeFeeData" : fullNodeFee , "userHash" : userHash})
     yield put(actions.setFees(fullNodeFee, data.networkFeeData));
   }catch(error){
     console.log("error: ", error)
@@ -485,7 +582,6 @@ export function* getNetworkFees(fullNodeFee){
 }
 
 export function* sendTX({address, amount, description}) {
-  console.log('amount: ', amount)
   const userHash = yield select(getUserHash);
   let to = new addresses.BaseAddress(address);
   let baseTransactions = [];
@@ -535,7 +631,7 @@ export function* sendTX({address, amount, description}) {
   baseTransactions.push(RBT);
   
   let transactionToSend =  new Transaction(baseTransactions, description, userHash);
-      
+
   const createTrustScoreMessage = {
     userHash,
     transactionHash: transactionToSend.createTransactionHash(),
@@ -550,7 +646,7 @@ export function* sendTX({address, amount, description}) {
     else{
       transactionToSend.addTrustScoreMessageToTransaction(data.transactionTrustScoreData);
       transactionToSend.signTransaction(Wallet);
-      yield API.fullnode(node.address).put(`/transaction`,JSON.stringify(transactionToSend));
+      yield API.fullnode(node.httpAddress).put(`/transaction`,JSON.stringify(transactionToSend));
       yield put(actions.toggleSpinner(false));
       yield put(actions.updateTooltipMsg(`${amount} COTI's sent.`))
     }
@@ -584,7 +680,7 @@ function* createMiniConsenuse(userHash){
   
   try {
     for (let i = 1; i < iteration; i++){
-      res = yield API.trustScore().post(`/networkFee`, validationNetworkFeeMessage);
+      res = yield API.trustScore(TS_NODE_URL).post(`/networkFee`, validationNetworkFeeMessage);
       validationNetworkFeeMessage.networkFeeData = res.data.networkFeeData;
     }
   }catch(error){
@@ -601,7 +697,6 @@ export function* updateBalanceOfAddress({body}){
   const updatedBalance = new bigdecimal.BigDecimal(`${balance === null ? 0 : balance}`);
   const updatedPreBalance = new bigdecimal.BigDecimal(`${preBalance === null ? 0 : preBalance}`);
 
-  console.log("updateBalanceOfAddress generatedAddress: ", generatedAddress);
   Wallet.setAddressWithBalance(generatedAddress, updatedBalance, updatedPreBalance);      
   yield put(actions.setAddresses(Wallet.getWalletAddresses()));
 }
@@ -610,7 +705,6 @@ export function* sendDispute({disputeData, comments, documents}){
   const {transactionHash,disputeItems,consumerHash} = disputeData;
   const consumerSignature = new Signature.OpenDispute(transactionHash, disputeItems).sign(Wallet);
   disputeData.consumerSignature = consumerSignature
-  console.log("disputeData:", disputeData)
   try{
     const res = yield API.financialServer().put(`/dispute`,JSON.stringify({disputeData}));
     if(comments){
@@ -620,12 +714,7 @@ export function* sendDispute({disputeData, comments, documents}){
     if(documents){
       documents.map(document => document.disputeHash = res.data.disputesData[0].hash);
       yield call(uploadEvidence, {documents: documents});
-    }
-    // yield put(actions.setDisputes(res.data.disputesData, "Consumer"));
-    yield call(getDisputesHistory);
-    yield put(push(`/disputeDetails/${transactionHash}/${res.data.disputesData[0].hash}`));
-    yield put(actions.toggleSpinner(false));
-    
+    } 
   }catch(error){
     console.log('error: ', error)
   }
@@ -646,15 +735,6 @@ export function* sendComments({comments}){
     disputeCommentData.userSignature = new Signature.UploadComments(disputeHash, comment, itemIds).sign(Wallet);
     try{
       const res = yield API.financialServer().put(`/comment`,JSON.stringify({disputeCommentData}));
-      if(res && inChat){
-        const newMessage = {
-          creationTime: new Date().getTime() / 1000, 
-          comment: comment, 
-          commentSide: 'Consumer'
-        }
-        yield put(actions.updateCommentsInItems(newMessage))
-      }
-      console.log('res: ', res.data)
     }catch(error){
       //TODO :: handle success / failed
       console.log('error: ', error)
@@ -663,16 +743,24 @@ export function* sendComments({comments}){
   }
 }
 
-export function* getDisputeDetails({disputeDetails}){
+export function* getDisputeDetails({disputeDetails, onLoadDispute}){
+  
   let {disputeHash, itemId } = disputeDetails;
   disputeDetails.userSignature = new Signature.GetDisputeDetails(disputeHash, itemId).sign(Wallet);
-
   try{
     const getCommentsResponse = yield API.financialServer().post(`/comment`,JSON.stringify({disputeCommentsData: disputeDetails}));
     const getDocumentsNameResponse = yield API.financialServer().post(`/document/names`,JSON.stringify({disputeDocumentNamesData: disputeDetails}));
     let [comments, documents] = [getCommentsResponse.data.disputeComments, getDocumentsNameResponse.data.disputeDocumentNames];
     yield call(createEvidencesAraay, documents);
-    const disputeDetailsResponse = { comments, documents } 
+    let disputeDetailsResponse = { comments, documents, itemId: String(itemId), disputeHash } 
+    if(onLoadDispute){
+      const userHash = yield select(getUserHash);
+      let disputeHistoryData = {disputeHash, userHash}
+      disputeHistoryData.userSignature = new Signature.GetDisputeItemsHistory(disputeHash).sign(Wallet, true);
+      const getDisputeHistoryResponse = yield API.financialServer().post(`/dispute/history`,JSON.stringify({disputeHistoryData}));
+      disputeDetailsResponse.history = getDisputeHistoryResponse.data.disputeHistory
+    }
+    
     yield put(actions.setDisputeDetails(disputeDetailsResponse))
       
   }catch(error){
@@ -681,11 +769,11 @@ export function* getDisputeDetails({disputeDetails}){
   }
 }
 
-function* createEvidencesAraay(documents){
+export function* createEvidencesAraay(documents){
   const userHash = yield select(getUserHash);
   return documents.forEach(document => {
-    let userSignature = new Signature.DownloadDocument(document.hash).sign(Wallet);
-    let src = `${FINANTIAL_SERVER}/document/${userHash}/${userSignature.r}/${userSignature.s}/${document.hash}`;
+    let userSignature = new Signature.DownloadDocument(document.hash).sign(Wallet, true);
+    let src = `${FINANCIAL_SERVER}/document/${userHash}/${userSignature.r}/${userSignature.s}/${document.hash}`;
     document.src = src
   })
 }
@@ -707,7 +795,7 @@ export function* uploadEvidence({documents}){
       try{
         const res = yield API.financialServer(true).post(`/document/upload`, form );
          if(res && item.inDispute){
-          yield put(actions.updateDocumentsInItems(res.data.document));
+          // yield put(actions.updateDocumentsInItems(res.data.document));
           yield put(actions.toggleSpinner(false));
           yield put(actions.updateTooltipMsg(`${res.data.document.fileName} was added successfully`));
          }
@@ -739,8 +827,6 @@ export function* downloadFile({downloadFileData}){
   try {
     const res = yield API.financialServer().post(`/document/download`,JSON.stringify({documentFileData: downloadFileData}));
     yield put(actions.setImage(res.data));
-    console.log('res: ', res)
-        
   } catch (error) {
     console.log('error: ', error)
   }
@@ -772,10 +858,8 @@ export function* UpdateItemsStatus({disputeUpdateItemData}){
       }  
       res = yield API.financialServer().put(`/dispute/item/update`,JSON.stringify({disputeUpdateItemData}));
     }
-      console.log('res: ', res)
-      yield call(getDisputesHistory);
       yield put(actions.toggleSpinner(false));
-  } catch (error) {
+  } catch (error) { 
       yield put(actions.toggleSpinner(false));
       console.log('error: ', error)
     }

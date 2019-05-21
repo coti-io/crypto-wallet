@@ -136,23 +136,31 @@ export default ExpandedRow = ({rowData, close, type, onViewDispute}) =>{
     return (
         <React.Fragment>
             <Tr>
-                {(type === 'sentDisputes' ||  type === 'claimDisputes') && 
+                {(type === 'sentDisputes') && 
                     <Td colSpan={2}>
                         <Box>
                             <Title>Merchant</Title>
                             <MerchantName>{rowData.merchant}</MerchantName>
                         </Box>
                     </Td>}
-                <Td colSpan={type === 'sentDisputes' ||  type === 'claimDisputes' ? 2 : 4} alignRight>
+                    {(type === 'claimDisputes') && 
+                    <Td colSpan={2}>
+                        <Box>
+                            <Title>Dispute hash</Title>
+                            <Hash>{rowData['dispute hash']}</Hash>
+                        </Box>
+                    </Td>}
+                <Td colSpan={type === 'claimDisputes' ? 2 : type === 'receivedDisputes' ? 4 : 2} alignRight>
                     <Arrow src={require('../../images/icons/crescentright.svg')} onClick={() => close()}/>
                 </Td>
             </Tr>
-            <OpenRow>
-                <Td colSpan={4}>
-                    <Title>dispute hash</Title>
-                    <Hash>{rowData['dispute hash']}</Hash>
-                </Td>
-            </OpenRow>
+            {(type !== 'claimDisputes') && 
+                <OpenRow>
+                    <Td colSpan={4}>
+                        <Title>dispute hash</Title>
+                        <Hash>{rowData['dispute hash']}</Hash>
+                    </Td>
+                </OpenRow>}
             <OpenRow>
                 <Td colSpan={2}>
                     <KeyTitle>{type === 'claimDisputes' ? 'assigned' : 'amount'}</KeyTitle>
@@ -160,18 +168,18 @@ export default ExpandedRow = ({rowData, close, type, onViewDispute}) =>{
                 <Td colSpan={2} alignRight rtl>
                     {
                         type === 'claimDisputes'
-                        ? <Time date={rowData['assigned']}/>
+                        ? <Time date={rowData['assigned']*1000}/>
                         : <Amount>{rowData.amount}</Amount>}
                 </Td>
             </OpenRow>
             <OpenRow>
-                <Td colSpan={type === 'claimDisputes' ? 3 : 2}>
+                <Td colSpan={2}>
                     <KeyTitle>{type === 'claimDisputes' ? 'pending arbitration' : 'opened'}</KeyTitle>
                 </Td>
-                <Td colSpan={type === 'claimDisputes' ? 1 : 2} rtl>
+                <Td colSpan={2} rtl>
                     {   
                         type === 'claimDisputes'
-                        ?  <Status>{rowData['pending arbitration']}</Status> 
+                        ?  <Status>{rowData['pending arbitration'] ? <Time date={rowData['pending arbitration']*1000}/> : '---'}</Status> 
                         : <Time date={rowData.opened}/>
                     }
                 </Td>
@@ -195,7 +203,7 @@ export default ExpandedRow = ({rowData, close, type, onViewDispute}) =>{
                 <Td colSpan={2} rtl>
                     {
                         type === 'claimDisputes'
-                        ? rowData['close date'] ? <Time date={rowData['close date']}/> : '---'
+                        ? rowData['close date'] ? <Time date={rowData['close date']*1000}/> : '---'
                         : <Status status={rowData.status}>{displayDisputeStatusCell(rowData.status)}</Status>
                     }
                 </Td>

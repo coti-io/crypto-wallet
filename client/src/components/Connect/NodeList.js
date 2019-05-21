@@ -95,6 +95,8 @@ const NodeItem = styled.li`
         font-weight: bold;
     }
     text-transform: capitalize;
+    overflow: hidden;
+    text-overflow: ellipsis;
     @media(max-width: 768px){
         white-space: nowrap; 
         overflow: hidden;
@@ -154,10 +156,11 @@ const calculatewidth = (windowWith, payment) => {
     if(payment){
         return "180px";
     }
-    return "355px";
+    return "305px";
 }
 
 const NodeList = ({nodeList, onSelectNode, windowWith, close, width, height, payment}) =>  {
+    
     return (
         <NodeListContainer width={width} height={height}>
             <Heading>
@@ -169,16 +172,18 @@ const NodeList = ({nodeList, onSelectNode, windowWith, close, width, height, pay
                 <TableTop>  
                     <Item width={calculatewidth(windowWith, payment)}>node name <img src={require('../../images/icons/crescent-dd_12X6.svg')}/></Item>
                     <Item width={windowWith > 768 ? "70px" : "20%"}>fee <img src={require('../../images/icons/crescent-dd_12X6.svg')}/></Item>
+                    <Item width={windowWith > 768 ? "70px" : "20%"}>min fee <img src={require('../../images/icons/crescent-dd_12X6.svg')}/></Item>
                     <Item width={windowWith > 768 ? "100px" : "25%"}>max fee <img src={require('../../images/icons/crescent-dd_12X6.svg')}/></Item>
-                    <Item width="25%">trust score <img src={require('../../images/icons/crescent-dd_12X6.svg')}/></Item>
+                    {/* <Item width="25%">trust score <img src={require('../../images/icons/crescent-dd_12X6.svg')}/></Item> */}
                 </TableTop>
                 {nodeList.map((node, i) => {
                     return (
                         <TableRow key={i} onClick={() => onSelectNode(node)}>
-                            <NodeItem width={calculatewidth(windowWith, payment)}>Node {node.nodeName}</NodeItem>
-                            <NodeItem width={windowWith > 768 ? "70px" : "20%"}>{node.fee}</NodeItem>
-                            <NodeItem width={windowWith > 768 ? "100px" : "25%"}>{node.maxFee} <Coti>COTI</Coti></NodeItem>
-                            <NodeItem width="25%">{node.trustScore}</NodeItem>
+                            <NodeItem width={calculatewidth(windowWith, payment)}>{node.nodeHash}</NodeItem>
+                            <NodeItem width={windowWith > 768 ? "70px" : "20%"}>{node.feeData.feePercentage}%</NodeItem>
+                            <NodeItem width={windowWith > 768 ? "70px" : "20%"}>{node.feeData.minimumFee}</NodeItem>
+                            <NodeItem width={windowWith > 768 ? "100px" : "25%"}>{node.feeData.maximumFee} <Coti>COTI</Coti></NodeItem>
+                            {/* <NodeItem width="25%">{nodeList..trustScore}</NodeItem> */}
                         </TableRow>
                     )
                 })}

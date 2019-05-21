@@ -101,6 +101,8 @@ class Activity extends Component {
 	}
 
 	render() {
+		const development = this.props.net == 'testnet' || this.props._development;
+
 		if(this.props.windowWidth > 768){
 			return (
 				<ActivityContainer>
@@ -108,8 +110,8 @@ class Activity extends Component {
 					<ActivityBox>
 						<ActivityTopRow toggleTables={(tabname)=>this.toggleDisputes(tabname)} />
                         {this.state.active === 'transactions' && <Transactions activity/>}
-                        {this.state.active === 'receivedDisputes' && <Disputes type={this.state.active}/>}
-						{this.state.active === 'sentDisputes' && <Disputes type={this.state.active}/>}
+                        {this.state.active === 'receivedDisputes' && development && <Disputes type={this.state.active}/>}
+						{this.state.active === 'sentDisputes' && development && <Disputes type={this.state.active}/>}
 					</ActivityBox>
 				</ActivityContainer>
 			) 
@@ -122,8 +124,8 @@ class Activity extends Component {
 					<ActivityTopRow toggleTables={(tabname)=>this.toggleDisputes(tabname)} />
 				</ActivitySection>
                 {this.state.active === 'transactions' && <Transactions activity/>}
-                {this.state.active === 'receivedDisputes' && <Disputes type={this.state.active}/>}
-				{this.state.active === 'sentDisputes' && <Disputes type={this.state.active}/>}
+                {this.state.active === 'receivedDisputes' && development && <Disputes type={this.state.active}/>}
+				{this.state.active === 'sentDisputes' && development && <Disputes type={this.state.active}/>}
 			</ActivityContainer>
 		)
 	}
@@ -131,6 +133,8 @@ class Activity extends Component {
 
 const mapStateToProps = ({app}) => {
 	return {
+		net: app.net,
+        _development: app._development,
 		windowWidth: app.windowWidth
 	};
 };

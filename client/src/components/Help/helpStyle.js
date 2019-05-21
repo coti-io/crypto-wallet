@@ -78,9 +78,6 @@ export const HelpArrow = styled.div`
 	margin-bottom: ${({active}) => active ? "5px" : "0"};
 	transform: rotate(${({active}) => active ? "90deg" : "0deg"});
 	transition: 0.3s all;
-	@media(max-width: 768px){
-		display:none;
-	}
 `;
 
 export const Visible = styled.div`
@@ -89,6 +86,9 @@ export const Visible = styled.div`
 	align-items: center;
 	@media(max-width: 768px){
 		font-size: 13px;
+		& > span{
+			width: 85%;
+		}
 	}
 `;
 

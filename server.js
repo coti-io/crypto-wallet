@@ -26,7 +26,7 @@ require('dotenv').config()
 if(process.env.NODE_ENV === 'production') {
     console.log('Rendering server running in production mode');
     // Remove sourcemaps
-    del(['client/build/static/*/*.map']).then(paths => {
+    del(['client/prod/static/*/*.map']).then(paths => {
         console.log('Deleted files and folders:\n', paths.join('\n'));
     });
 }
@@ -61,7 +61,7 @@ function setPaymentRequest(req, res, next){
 };
 
 // Serve any static files
-app.use('/', express.static(path.join(__dirname, 'client/build')));
+app.use('/', express.static(path.join(__dirname, 'client/prod')));
 
 app.post('/payment', setPaymentRequest, (req, res) => {
     res.redirect(301, `/payment?puid=${req.data.puid}`);
@@ -73,7 +73,7 @@ app.put('/paymentRequest/:puid', deletePaymentRequest, (req, res) => res.status(
 
 // Handle React routing, return all requests to React app
 app.get('*', function(req, res) {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'client/prod', 'index.html'));
 });
 
   

@@ -1,4 +1,4 @@
-# TEST NET Frontend
+# Crypto Wallet Frontend
 
 The repository contains the client side React code + A rendering server (express)
 

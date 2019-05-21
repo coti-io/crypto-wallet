@@ -514,7 +514,11 @@ class Row extends Component {
     }
 
     viewDispute(disputeHash, transactionHash){
-        this.props.history.push(`/disputeDetails/${transactionHash}/${disputeHash}`)
+        let path = `/disputeDetails/${transactionHash}/${disputeHash}`;
+        if(this.props.type === 'claimDisputes'){
+            path = this.props.location.pathname + path
+        }
+        this.props.history.push(path)
     }
 
     displayDisputeStatusCell(value){
@@ -547,12 +551,12 @@ class Row extends Component {
                     }
                     <Td>
                         {type ==='claimDisputes' 
-                            ? <Time date={rowData['assigned']}/>
+                            ? <Time date={rowData['assigned']*1000}/>
                             : rowData.amount}
                     </Td>
                     <Td>
                         {type ==='claimDisputes'
-                            ? rowData['pending arbitration']
+                            ? rowData['pending arbitration'] ? <Time date={rowData['pending arbitration']*1000}/> : '---'
                             : <Time date={rowData.opened}/>}
                     </Td>
                     <Td>
@@ -562,7 +566,7 @@ class Row extends Component {
                     </Td>
                     <Td>
                         {type ==='claimDisputes'
-                            ? rowData['close date'] ? <Time date={rowData['close date']}/> : '---'
+                            ? rowData['close date'] ? <Time date={rowData['close date']*1000}/> : '---'
                             : this.displayDisputeStatusCell(rowData.status)}
                     </Td>
                     <ViewDetails onClick={() => this.viewDispute(rowData["dispute hash"], rowData['transaction hash'])}>View Details <img src={require('../../images/icons/crescentright.svg')}/></ViewDetails>    

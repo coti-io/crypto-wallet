@@ -31,7 +31,7 @@ const ChatFeed = styled.div`
     overflow-y: auto;
     height: ${({feedHeight}) => feedHeight}px;
     padding-right: 10px;
-    transition: 0.5s height linear;
+    ${'' /* transition: 0.5s height linear; */}
     &::-webkit-scrollbar:horizontal  {
         height: 6px;
     }
@@ -58,6 +58,7 @@ const Message = styled.div`
     ${props => !props.isUser ? 'margin-left:auto;' : 'margin-right:auto;' }
     border-radius: 10px;
     max-width: 670px;
+    position: relative;
     background-color: ${props => props.isUser ? 'rgba(43, 191, 223, 0.05)': 'rgba(225, 137, 21, 0.1)' };
     border: solid 1px rgba(43, 191, 223, 0.1);
     @media(max-width: 768px){
@@ -106,6 +107,9 @@ const DateToday = styled.div`
     line-height: 2.67;
     letter-spacing: 0.1px;
     color: #ffffff;
+    @media(max-width: 768px){
+        margin-bottom: 30px;
+    }
 `;
 
 const Wrapper = styled.div`
@@ -192,6 +196,13 @@ const MessageDateMobile = styled.div`
     }
 `
 
+const SenderName = styled.span`
+    position: absolute;
+    top: -15px;
+    left: 5px;
+    font-size: 10px;
+`
+
 class ChatBox extends Component{
     constructor(props){
         super(props);
@@ -204,6 +215,9 @@ class ChatBox extends Component{
     componentWillReceiveProps(nextProps){
         if(this.props.itemId != nextProps.itemId){
             this.scrollToBottom();
+        }
+        if(nextProps.comments && nextProps.comments.length < 1){
+            this.setState({...this.state, message: "", chat: []})
         }
         if(nextProps.comments && nextProps.comments.length > 0){
             const chat = nextProps.comments.filter(comment => comment.comment !== '');
@@ -235,7 +249,8 @@ class ChatBox extends Component{
                         <Bubble>
                             <Message isUser={item.commentSide === 'Consumer'}>
                                 <MessageTextContainer>
-                                    {item.comment}    
+                                    {item.comment}  
+                                    <SenderName>{item.commentSide}</SenderName>  
                                 </MessageTextContainer>
                                 <MessageDateMobile isUser={item.commentSide === 'Consumer'}>{Hour}</MessageDateMobile>
                             </Message>
@@ -252,6 +267,7 @@ class ChatBox extends Component{
                 && this.props.status !== "AcceptedByMerchant" && this.props.status !== "CanceledByConsumer" 
                 && this.props.status !== "Claim" && this.props.status !== "AcceptedByArbitrators" 
                 && this.props.status !== "RejectedByArbitrators" && !this.props.isArbitrator
+                && this.props.status !== "RejectedByMerchant"
     }
     
     onSendMessage() {
@@ -269,16 +285,14 @@ class ChatBox extends Component{
     }
 
     scrollToBottom = () => {
-        this.messagesEnd.scrollIntoView({ behavior: "smooth" });
-      }
+    var objDiv = document.getElementById("feed");
+    objDiv.scrollTop = objDiv.scrollHeight;
+    }
       
-      componentDidMount() {
-        this.scrollToBottom();
-      }
       
-      componentDidUpdate() {
+    componentDidUpdate() {
         this.scrollToBottom();
-      }
+    }
 
     render(){
         return (
@@ -288,10 +302,7 @@ class ChatBox extends Component{
                     <TitleText>Message History</TitleText>
                 </TitleContainer>
                 <ChatFeed id="feed" feedHeight={this.state.chat.length > 0 ? '320' : '70'} >
-                    {this.props.comments && this.appendMessages()}
-                    <div style={{ float:"left", clear: "both" }}
-                        ref={(el) => { this.messagesEnd = el; }}>
-                    </div>
+                    {this.appendMessages()}
                 </ChatFeed>
                 {this.checkConditions() && <Wrapper>
                     <Textarea placeholder="Write a message" value={this.state.message} onChange={(e) => this.setState({...this.state, message: e.target.value})} maxLength={255}/>

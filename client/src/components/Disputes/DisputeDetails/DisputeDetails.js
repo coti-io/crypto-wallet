@@ -394,10 +394,12 @@ class DisputeDetails extends Component {
     }
   
     componentWillMount(){
-        this.props.setPage('activity');
+        let page;
+        page = this.props.location.pathname.includes('arbitration') ? 'arbitration' : 'activity';
+        this.props.setPage(page);
         this.createDisputedItemsArr();
     }
-
+    
     componentWillReceiveProps(nextProps){
         const {currentDispute} = this.findDisputeByTxHash(nextProps)
         if(this.state.currentDispute.disputeStatus !== currentDispute.disputeStatus){
@@ -414,9 +416,15 @@ class DisputeDetails extends Component {
         let shouldUpdate = false;
         disputedItems.forEach(item => {
             currentDispute.disputeItems.forEach(updatedItem => {
-                if(item.id === updatedItem.id && item.status !== updatedItem.status){
-                    item.status = updatedItem.status;
-                    shouldUpdate = true;
+                if(item.id === updatedItem.id){
+                    if(item.status !== updatedItem.status){
+                        item.status = updatedItem.status;
+                        shouldUpdate = true;
+                    }
+                    if(updatedItem.arbitratorItemVote && updatedItem.arbitratorItemVote.arbitratorHash === this.props.userHash){
+                        item.allowedToVote = false;
+                        shouldUpdate = true;
+                    }
                 }
             })
         })
@@ -435,18 +443,34 @@ class DisputeDetails extends Component {
     }
 
     componentDidMount(){
-        this.getDisputeData(this.state.itemSelectedId);
+        this.getDisputeData(this.state.itemSelectedId, true);
+        this.props.toggleSpinner(false);
     }
     
-    getDisputeData(itemId) {
+    getDisputeData(itemId, onLoadDispute) {
         const disputeHash = this.props.match.params.disputeHash
         let disputeDetails = {
             disputeHash,
             itemId,
             userHash: this.props.userHash
         }
-                
-        this.props.getDisputeDetails(disputeDetails);
+        this.props.getDisputeDetails(disputeDetails, onLoadDispute);
+    }
+
+    componentWillUnmount() {
+        this.clearDisputeDetails()
+    }
+    
+
+    clearDisputeDetails(){
+        const disputeDetails = {
+            disputeHash: null,
+            itemId: null,
+            documents: [],
+            comments: [],
+            history: []
+        }
+        this.props.setDisputeDetails(disputeDetails);
     }
 
     findDisputeByTxHash(props){
@@ -494,8 +518,10 @@ class DisputeDetails extends Component {
             amount: item.price,
             reason: item.reason,
             status: item.status,
+            allowedToVote: item.arbitratorItemVote === null
         }
     }
+
 
     getColor(status){
         switch(status) {
@@ -515,7 +541,7 @@ class DisputeDetails extends Component {
             case "AcceptedByMerchant":
                 return "#F6FEFC"
             case "AcceptedByArbitrators":
-                return "#F6FEFC2"
+                return "#F6FEFC"
             case 'RejectedByArbitrators':
                 return '#FFF3F5'
             default:
@@ -610,12 +636,18 @@ class DisputeDetails extends Component {
         }
     }
 
+    getVotePermision(){
+        if(this.state.disputedItems.length > 0){
+            return this.state.disputedItems.filter(item => item.id == this.state.itemSelectedId)[0].allowedToVote;
+        }
+    }
+
     checkConditions(isDisputeOpen, isMerchant, isArbitrator){
         const status = this.state.disputedItems.filter(item => item.id == this.state.itemSelectedId)[0].status;
         return isDisputeOpen && !isMerchant && !isArbitrator
                 && status !== "AcceptedByMerchant" && status !== "CanceledByConsumer" 
                 && status !== "Claim" && status !== "AcceptedByArbitrators" 
-                && status !== "RejectedByArbitrators"
+                && status !== "RejectedByArbitrators" && status !== "RejectedByMerchant"
     }
 
     UpdateItemsStatus(itemId, status){
@@ -654,7 +686,7 @@ class DisputeDetails extends Component {
                         {isDisputeOpen && !isMerchant && !isArbitrator && <Cancel onClick={() => this.setState({...this.state, warningCancelDisputePopup: true})}><span>+</span>Cancel entire dispute</Cancel>}
                         {this.state.warningCancelDisputePopup && <Warning title="Cancel Entire Dispute" yes={()=>this.UpdateItemsStatus(null, "CanceledByConsumer")} no={() => this.setState({warningCancelDisputePopup: false})} note/>}
                     </Left>
-                    <BackToDisputes onClick={()=> this.props.history.push({pathname: '/activity', search: this.state.isConsumer ? '?sentDisputes=true' : '?receivedDisputes=true'})}><span>Back to disputes list > </span></BackToDisputes>
+                    <BackToDisputes onClick={()=> this.props.history.push(this.state.isConsumer ? '/activity?sentDisputes=true' : isArbitrator ? '/arbitration' : '/activity?receivedDisputes=true')}><span>Back to disputes list > </span></BackToDisputes>
                     <Right>
 						{this.state.itemSelectedId && <ChatBox isMerchant={isMerchant} isArbitrator={isArbitrator} itemId={this.state.itemSelectedId} isDisputeOpen={isDisputeOpen} status={this.getItemStatus()}/>}
                         {this.state.itemSelectedId && 
@@ -674,7 +706,7 @@ class DisputeDetails extends Component {
                         {this.checkConditions(isDisputeOpen, isMerchant, isArbitrator) && <Cancel onClick={() => this.setState({...this.state, warningCancelProductPopup: true})}><span>+</span>Cancel product dispute</Cancel>}
                         {this.state.warningCancelProductPopup && <Warning title="Cancel Product Dispute" yes={()=>this.UpdateItemsStatus(this.state.itemSelectedId, "CanceledByConsumer")} no={() => this.setState({...this.state, warningCancelProductPopup: false})}/>}
                         { ((isMerchant && this.getItemStatus() === 'Recall') 
-                        || (isArbitrator && this.getItemStatus() === 'Claim')) 
+                        || (isArbitrator && this.getItemStatus() === 'Claim' && this.getVotePermision())) 
                         && <ButtonsWrapper>
                              <Cancel onClick={()=>this.UpdateItemsStatus(this.state.itemSelectedId, isArbitrator? "RejectedByArbitrator" : "RejectedByMerchant")}><span>+</span>Reject</Cancel>
                              <Accept onClick={()=>this.UpdateItemsStatus(this.state.itemSelectedId, isArbitrator? "AcceptedByArbitrator" : "AcceptedByMerchant")}><img src={require('../../../images/icons/buttonicons_accepts_16X16.svg')}/>Accept</Accept>
@@ -700,7 +732,8 @@ const mapStateToProps = ({account, app}) => {
 const mapDispatchToProps = dispatch => {
     return {
         setPage: page => dispatch(actions.setPage(page)),
-        getDisputeDetails: disputeDetails => dispatch(actions.getDisputeDetails(disputeDetails)),
+        setDisputeDetails: (disputeDetails) => dispatch(actions.setDisputeDetails(disputeDetails)),
+        getDisputeDetails: (disputeDetails, onLoadDispute) => dispatch(actions.getDisputeDetails(disputeDetails, onLoadDispute)),
         UpdateItemsStatus: disputeDetails => dispatch(actions.UpdateItemsStatus(disputeDetails)),
         toggleSpinner: flag => dispatch(actions.toggleSpinner(flag))
     }

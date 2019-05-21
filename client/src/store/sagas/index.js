@@ -2,7 +2,8 @@ import { takeEvery, all, takeLatest, throttle } from "redux-saga/effects";
 import * as actionTypes from "../actions/actionTypes";
 import * as actions from "../actions/app";
 import {
-	setWindowWidth
+	getNodesList,
+	setWindowWidth,
 } from "./app";
 
 import { 
@@ -29,7 +30,8 @@ import {
 
 export function* watchApp() {
 	yield all([
-		throttle(500, actionTypes.SET_WINDOW_WIDTH, setWindowWidth)
+		throttle(500, actionTypes.GET_NODES_LIST, getNodesList ),
+		throttle(500, actionTypes.SET_WINDOW_WIDTH, setWindowWidth),
 	]);
 }
 

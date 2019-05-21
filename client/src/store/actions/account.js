@@ -42,11 +42,12 @@ export const generateAddress = () => {
     };
 };
 
-export const setTrustScoreAndUserHash = ({trustScore, userHash}) => {
+export const setTrustScoreAndUserHashAndUserType = ({trustScore, userHash, userType}) => {
     return {
       type: actionTypes.SET_TRUST_SCORE_AND_USERHASH,
       trustScore,
-      userHash
+      userHash,
+      userType
     };
 };
 
@@ -193,10 +194,11 @@ export const updateDocumentsInItems = document => {
     }
 }
 
-export const getDisputeDetails = (disputeDetails) => {
+export const getDisputeDetails = (disputeDetails, onLoadDispute) => {
     return {
       type: actionTypes.GET_DISPUTE_DETAILS,
-      disputeDetails
+      disputeDetails,
+      onLoadDispute
     }
   }
 
@@ -227,3 +229,17 @@ export const setImage = (image) => {
       image
     }
   }
+
+export const notificationChannelResponse = data => {
+    return {
+      type: actionTypes.NOTIFICATION_CHANNEL,
+      data
+    }
+}
+
+export const setNotifications = data => {
+    return {
+      type: actionTypes.SET_NOTIFICATIONS,
+      data
+    }
+}

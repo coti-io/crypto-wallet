@@ -7,21 +7,17 @@ import Activity from '../../components/Activity/Activity';
 import Arbitraton from '../../components/Arbitration/Arbitraton';
 import Help from '../../components/Help/help';
 
-class Wallet extends Component {
+class MainnetRouter extends Component {
 
     render () {
         return (
             <Switch>
                 <Route path="/" exact component={Overview} />
-                <Route path="/createDispute/:transactionHash" component={OpenDispute} />  
-                <Route path="/disputeDetails/:txHash/:disputeHash" component={DisputeDetails} />              
                 <Route path="/activity" component={Activity} /> 
-                <Route path="/arbitration" component={Arbitraton} exact/> 
-                <Route path="/arbitration/disputeDetails/:txHash/:disputeHash" component={DisputeDetails} exact/>
                 <Route path="/help" component={Help} /> 
             </Switch>
         );
     }
 }
 
-export default Wallet;
+export default MainnetRouter;

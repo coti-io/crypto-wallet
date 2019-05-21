@@ -204,8 +204,14 @@ const Holder = styled.li`
     padding: 10px 40px;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
 `
 
+const Wrapper = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+`
 
 const HamburgerContainer = styled.div`
     position: absolute;
@@ -317,7 +323,7 @@ class Nav extends Component {
         if(pageSelected !== this.props.page) {
             this.props.setPage(pageSelected)
         }
-    
+        
         return(
             <Menu desktop={Desktop}>
                 <Page id="overview" selected={pageSelected} onClick={e => this.changePage(e.target.id)} onMouseEnter={e => this.hoverfn(e.target.id, true)} onMouseLeave={e => this.hoverfn(e.target.id, false)}>
@@ -346,9 +352,15 @@ class Nav extends Component {
                 {!Desktop &&
                     <React.Fragment>
                         <Holder>
-                            {/* <Notification/> */}
-                            <WalletType><img src={require('../../images/icons/menuicon_06_restpass_24X24.svg')}/>Wallet type: <span>consumer </span></WalletType>
-                            {/* <UpgradeBtn onClick={() => this.props.toggleModal(true)}>upgrade</UpgradeBtn> */}
+                            <Wrapper>
+                                {/* <Notification/> */}
+                                <WalletType><img src={require('../../images/icons/menuicon_06_restpass_24X24.svg')}/>Wallet type: <span>{this.props.userType} </span></WalletType>
+                                {
+                                    this.props.userType == 'consumer'
+                                    && ( this.props.net == 'testnet'
+                                    || this.props._development ) &&
+                                    <UpgradeBtn onClick={() => this.props.toggleModal(true)}>upgrade</UpgradeBtn>}
+                            </Wrapper>
                         </Holder>
                         <LogoutMobile onClick={()=>this.props.logout()}><img src={require('../../images/icons/menuicon_07_logout_24X24.svg')}></img>Log out</LogoutMobile>
                     </React.Fragment>
@@ -390,7 +402,12 @@ class Nav extends Component {
         this.setState({...this.state, successPopup: false})
     }
 
+    upgradeWallet(type){
+        window.location.href = `${process.env.REACT_APP_CPS}/wallet/type?userhash=${this.props.userHash}&net=${this.props.net}&user_type=${type}`;
+    }
+
     render(){
+        const { net, _development, userType } = this.props; 
         const pageSelected = this.props.location.pathname.replace('/','')
         return(
             <Navbar justify={this.props.windowWidth > 1080  ? "space-between" : "center"}>
@@ -411,10 +428,10 @@ class Nav extends Component {
 
                 { this.props.windowWidth > 1080 && 
                 <RightSection onMouseEnter={e => this.hoverfn(e.target.id, true)} onMouseLeave={e => this.hoverfn(e.target.id, false)}>
-                        {/* <Notification/> */}
-                       <WalletType>Wallet type: <span>consumer</span></WalletType>
-                       {/* <UpgradeBtn onClick={() => this.props.toggleModal(true)}>upgrade</UpgradeBtn> */}
-                        <Logout onClick={()=>this.props.logout()}>logout </Logout>
+                    {/* <Notification/> */}
+                    <WalletType>Wallet type: <span>{this.props.userType}</span></WalletType>
+                    {userType == 'consumer' && (_development || net == 'testnet') && <UpgradeBtn onClick={() => this.props.toggleModal(true)}>upgrade</UpgradeBtn>}
+                    <Logout onClick={()=>this.props.logout()}>logout </Logout>
                 </RightSection>}
                 {this.props.showModal && <Popup close={() => this.props.toggleModal(false)} upgradeWallet={(type) => this.upgradeWallet(type)} closeModal={this.closeModal}/>}
                 {this.state.successPopup && <SuccessPopup title="success" subtitle="Your wallet has updated." close={() => this.hideSucessPopup()}/>}
@@ -428,10 +445,14 @@ class Nav extends Component {
 const mapStateToProps = ({app, account}) => {
     return {
         page: app.page,
+        net: app.net,
+        _development: app._development,
         showModal: app.showModal,
         tooltipMsg: app.tooltipMsg,
         windowWidth: app.windowWidth,
-        isArbitrator: account.isArbitrator
+        isArbitrator: account.isArbitrator,
+        userType: account.userType,
+        userHash: account.userHash
     };
 };
 

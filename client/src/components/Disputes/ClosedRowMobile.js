@@ -21,6 +21,9 @@ const Td = styled.td`
     direction: ${({rtl}) => rtl && 'rtl'};
     text-align: ${({alignRight}) => alignRight && 'right'};
     font-family: ClanOT-Medium;
+    overflow: ${({hash}) => hash && 'hidden'};
+    text-overflow: ${({hash}) => hash && 'ellipsis'};
+    white-space: ${({hash}) => hash && 'nowrap'}; 
     &:first-child{
         padding-left: 20px;
     }
@@ -94,7 +97,7 @@ export default ClosedRow = ({rowData, open, type}) =>{
                 {type === 'claimDisputes' 
 
                 ?   <React.Fragment>
-                        <Td colSpan={2} padding="20px 0">{rowData.merchant}</Td>
+                        <Td colSpan={2} padding="20px 0" hash>{rowData['dispute hash']}</Td>
                         <Td vertical={'top'} colSpan={2} alignRight padding="20px 0">
                             {displayDisputeStatusCell(rowData.status)}
                             <Arrow src={require('../../images/icons/crescentright.svg')} onClick={() => open()} middle marginLeft/>

@@ -9,15 +9,17 @@ import asyncComponent from './hoc/asyncComponent/asyncComponent';
 import ConnectComponent from './components/Connect/Connect';
 import Nav from './components/Nav/nav';
 import Payment from './components/Payment/Payments';
-
 import "./fonts/fonts";
 import bgImg from './images/bg.jpg';
-
-
 import Overview from './components/Overview/overview';
 
+
 const AsyncWallet = asyncComponent(() => {
-  return import(/* webpackChunkName: "wallet" */ './containers/Wallet/Wallet');
+  return import(/* webpackChunkName: "testnet" */ './containers/Wallet/Wallet');
+});
+
+const AsyncWalletMainnet = asyncComponent(() => {
+  return import(/* webpackChunkName: "mainnet" */ './containers/Wallet/Mainnet');
 });
 
 
@@ -147,7 +149,6 @@ class App extends Component {
 
   getRoute = () => {
     const { pathname } = this.props.location;
-
     if(pathname == '/connect')
       return (
         <React.Fragment>
@@ -168,7 +169,11 @@ class App extends Component {
         <React.Fragment>
           <Nav />
           <View wallet>
-            <AsyncWallet/>
+            {
+              this.props.net == 'testnet' || this.props._development
+              ? <AsyncWallet/>
+              : <AsyncWalletMainnet />
+            }
           </View>
         </React.Fragment>
       )
@@ -197,9 +202,11 @@ class App extends Component {
 
 const mapStateToProps = ({app}) => {
   return {
-      page: app.page,
-      isLoading: app.isLoading,
-      tooltipMsg: app.tooltipMsg
+    _development: app._development,
+    net: app.net,
+    page: app.page,
+    isLoading: app.isLoading,
+    tooltipMsg: app.tooltipMsg
   };
 };
 

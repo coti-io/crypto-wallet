@@ -1,5 +1,6 @@
 import * as actionTypes from '../actions/actionTypes';
 import { updateObject } from '../../shared/utility';
+import { DEV_MODE } from '../../config';
 
 const initialState = {
     page: 'connect',
@@ -10,17 +11,21 @@ const initialState = {
     tooltipMsg: false,
     successPopup: false,
     failPopup: false,
-    nodeList: [
-        {nodeName: 'A65s765d0hczk', fee: '0.01%', maxFee: '100', trustScore: '88', address: "http://35.157.65.34:7070" }
-    ],
+    nodeList: {},
     windowWidth: window.innerWidth,
-    isArbitrator: false
+    isArbitrator: false,
+    net: '',
+    _development: DEV_MODE == 'true',
 };
 
 const setPage = (state,action) => {
     return updateObject( state , { 
         page: action.page
     })
+}
+
+const setNodes = (state, { nodes, net }) => {
+    return updateObject( state , { nodeList: nodes, net, selectedNode: {} }) 
 }
 
 const toggleModal = (state, action) => {
@@ -55,9 +60,9 @@ const setWindowWidth = (state, {width}) => {
     return updateObject(state, {windowWidth: width})
 }
 
-
 const reducer = ( state = initialState, action ) => {
     switch ( action.type ) {
+        case actionTypes.SET_NODES_LIST: return setNodes(state, action);
         case actionTypes.SET_PAGE: return setPage(state, action);
         case actionTypes.TOGGLE_MODAL: return toggleModal(state, action);
         case actionTypes.SELECT_NODE: return setNodeSelected(state, action);

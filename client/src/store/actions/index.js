@@ -6,7 +6,7 @@ export {
     isWallet,
     getPaymentRequest,
     setPaymentRequest,
-    setTrustScoreAndUserHash,
+    setTrustScoreAndUserHashAndUserType,
     generateAddress,
     setAddresses,
     addressSubscription,
@@ -28,11 +28,15 @@ export {
     updateCommentsInItems,
     updateDocumentsInItems,
     UpdateItemsStatus,
-    getDisputes
+    getDisputes,
+    notificationChannelResponse,
+    setNotifications
 } from './account';
 
 
 export {
+    getNodesList,
+    setNodesList,
     toggleModal,
     toggleSpinner,
     setPage,

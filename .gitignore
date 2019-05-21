@@ -10,6 +10,8 @@
 # production
 /client/build
 /build
+client/prod/
+prod/
 
 
 #options.json

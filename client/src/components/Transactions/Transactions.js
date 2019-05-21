@@ -238,12 +238,12 @@ class Transactions extends Component {
         transactionsFiltered: [],
         transactionsRowsNumber: 0,
         from: 0,
-        to: this.props.activity ? 6 : 2
+        to: this.props.activity ? 8 : 2
     }
 
 
     componentDidMount(){
-        const maxRows = this.props.activity ? 6 : 2;
+        const maxRows = this.props.activity ? 8 : 2;
         this.createTable(0, maxRows);
     }
 
@@ -255,7 +255,7 @@ class Transactions extends Component {
         let fullNodeFee = '';
         let networkFee = '';
         let receiverAddress = ''
-        let transactions = Array.from(this.props.transactions.values()) || Array.from(updatedTransactions);
+        let transactions = updatedTransactions ? Array.from(updatedTransactions) : Array.from(this.props.transactions.values());
         transactions.forEach((tx,i) => {
             tx[0].baseTransactions.forEach(btx => {
                 if(btx.name === 'PIBT'){
@@ -337,11 +337,12 @@ class Transactions extends Component {
         return true;
     }
     componentWillReceiveProps(nextProps){
-        if(!this.compareMaps(nextProps.transactions, this.props.transactions)){
-            const to = this.props.activity ? 6 : 2
-            this.createTable(0, to , nextProps.transactions.values())
-        }
-        // else if(nextProps.transactions !== this.props.transactions){
+        const to = this.props.activity ? 8 : 2
+        this.createTable(0, to , nextProps.transactions.values())
+        // if(!this.compareMaps(nextProps.transactions, this.props.transactions)){
+        // }
+        // else if(nextProps.transactions.length !== this.props.transactions.length){
+        //     console.log("!==")
         //     this.createTable(this.state.from, this.state.to , nextProps.transactions.values())
         // }
     }
@@ -354,7 +355,7 @@ class Transactions extends Component {
                                             <img src={require('../../images/icons/transactions.svg')} alt="transactions"/>
                                             Recent Transactions
                                         </Heading>}
-                <TableWrapper height={this.props.activity && '310px'}>
+                <TableWrapper height={this.props.activity && '500px'}>
                     <Table>
                         <thead>
                             <Tr>
@@ -369,7 +370,7 @@ class Transactions extends Component {
                     </Table>
                 </TableWrapper>
                 {this.props.activity 
-                    ? this.props.transactions.size > 0 && this.state.transactionsFiltered.length > 0 && <Pagination maxRows={6} array={this.state.transactionsRowsNumber} setFilterdRows={(from, to) => this.createTable(from, to)} maxPages={this.props.windowWidth > 768 ? 8 : 4}/>
+                    ? this.props.transactions.size > 7 && this.state.transactionsFiltered.length > 0 && <Pagination maxRows={8} array={this.state.transactionsRowsNumber} setFilterdRows={(from, to) => this.createTable(from, to)} maxPages={this.props.windowWidth > 768 ? 8 : 4}/>
                     : <ViewAll onClick={() => this.toActivity()}>View all Transactions <img src={require('../../images/icons/crescentright.svg')}/></ViewAll>}
             </TransactionsContainer>
         )

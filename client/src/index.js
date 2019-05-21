@@ -15,6 +15,7 @@ import { watchApp, watchAccount } from "./store/sagas";
 import appReducer from "./store/reducers/app";
 import accountReducer from "./store/reducers/account";
 import * as serviceWorker from './serviceWorker';
+require('dotenv').config();
 
 const composeEnhancers = process.env.NODE_ENV === "development" && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ? 
   window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ : null || compose;

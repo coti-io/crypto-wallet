@@ -182,7 +182,7 @@ class Evidence extends Component{
         return this.props.isDisputeOpen && this.props.allowedToUplaodNew
                 && this.props.status !== "AcceptedByMerchant" && this.props.status !== "CanceledByConsumer" 
                 && this.props.status !== "Claim" && this.props.status !== "AcceptedByArbitrators" 
-                && this.props.status !== "RejectedByArbitrators"
+                && this.props.status !== "RejectedByArbitrators" && this.props.status !== "RejectedByMerchant"
     }
 
     componentWillReceiveProps(nextProps){

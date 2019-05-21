@@ -5,9 +5,16 @@ import styled from 'styled-components';
 const NotificationRowHolder = styled.div`
     margin: 0 -30px;
     padding: 25px 30px;
-    border-top: 1px solid #ebebeb;
+    &:not(:last-child){
+        border-bottom: 1px solid #ebebeb;
+    }
     &:last-child{
         padding: 25px 30px 0 30px;
+    }
+    @media(max-width: 1080px){
+        &:last-child{
+            padding: 25px 30px;
+        }
     }
 `
 
@@ -43,7 +50,16 @@ const Address = styled.div`
 const Details = styled.div`
     color: #2bbfdf;
     font-family: ClanOT-News;
-  font-size: 12px;
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+    font-weight: bold;
+`
+
+const Read = styled.div`
+    color: #2bbfdf;
+    font-family: ClanOT-News;
+    font-size: 12px;
     text-decoration: underline;
     cursor: pointer;
     font-weight: bold;
@@ -53,6 +69,12 @@ const Box = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
+`
+
+const Heading = styled.div`
+    font-size: 12px;
+    font-family: ClanOT-Medium;
+    margin-bottom: 12px;
 `
 
 const Button = styled.button`
@@ -80,18 +102,16 @@ const Amount = styled.div`
 
 let NotificationRow;
 
-export default NotificationRow = ({date}) =>{
+export default NotificationRow = ({notificationContent, disputHash, onViewDetailsClick}) =>{
     return (<NotificationRowHolder>
                <Box>
-                    <Title>dISPUTE hASH</Title>
-                    <Amount>230</Amount>
+                    <Title>dispute hash</Title>
                </Box>  
-               <Hash>5UMXEPHDD42B5RLCW58KMDADX8JDKU89S6QGUKKFXCW74E6DM25UMXEPHDD42B5RLCW58KMDADX8JDKU89S6QGUKKFXCW74E6DM2</Hash>
-               <Title>wALLET ADDRESS</Title>
-               <Address>3b199f20-cf46-4343-8b5b-eebc27ad3c57</Address>
+               <Hash>{disputHash}</Hash>
+               <Heading>{notificationContent}</Heading>
                <Box>
-                    <Details>View dispute details</Details>
-                    <Button>Send funds</Button>
+                    <Details onClick={() => onViewDetailsClick()}>View dispute details</Details>
+                    <Read>Read</Read>
                </Box>
             </NotificationRowHolder>)
 }
